@@ -1,0 +1,26 @@
+# Ignore Node.js dependencies
+Frontend/node_modules/
+Backend/node_modules/
+
+# Ignore environment files
+Frontend/.env
+Backend/.env
+
+# Ignore build files
+Frontend/dist/
+Backend/build/
+
+# Ignore logs
+Frontend/logs/
+Backend/logs/
+*.log
+
+# Ignore cache
+Frontend/.next/
+Frontend/.parcel-cache/
+Frontend/.turbo/
+Backend/.cache/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
