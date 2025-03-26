@@ -3,43 +3,22 @@ import { useState } from "react"
 import { SearchBar } from "./components/SearchBar"
 import { SearchResults } from "./components/SearchResult"
 import { AIAssistant } from "./components/AIAssistance"
+import axios from 'axios'
 
 function Dummy() {
     const [query, setQuery] = useState("")
     const [isSearching, setIsSearching] = useState(false)
     const [results, setResults] = useState([])
   
-    const handleSearch = (searchQuery) => {
+    const handleSearch = async (searchQuery) => {
       setQuery(searchQuery)
+      console.log( searchQuery)
       setIsSearching(true)
-  
-      // Simulate search results after a delay
-      setTimeout(() => {
-        const mockResults = [
-          {
-            id: 1,
-            title: "Understanding Healthcare AI",
-            content: "AI is transforming healthcare by improving diagnostics and patient care...",
-          },
-          {
-            id: 2,
-            title: "Medical Records Management",
-            content: "Secure and efficient management of medical records using advanced technology...",
-          },
-          {
-            id: 3,
-            title: "Telemedicine Solutions",
-            content: "Remote healthcare services that connect patients with healthcare providers...",
-          },
-          {
-            id: 4,
-            title: "Preventive Healthcare",
-            content: "AI-powered solutions for early detection and prevention of health issues...",
-          },
-        ]
-        setResults(mockResults)
-        setIsSearching(false)
-      }, 1500)
+      const result = await axios.post('http://localhost:3001/analyse/analyse', {
+        input: searchQuery
+    });
+    setResults(result.data.data)
+    setIsSearching(false)
     }
   
     return (

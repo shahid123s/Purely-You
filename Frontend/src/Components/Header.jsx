@@ -24,7 +24,7 @@ export default function Header() {
           </div>
           <div>
             <h1 className="text-lg font-bold text-cyan-700">
-              GreenLeaf <span className="text-cyan-700">Health</span>
+              Purely <span className="text-cyan-700">You</span>
             </h1>
           </div>
         </div>
