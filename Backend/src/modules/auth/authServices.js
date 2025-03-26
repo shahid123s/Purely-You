@@ -10,13 +10,13 @@ export const authServices = {
         userLogin: async (email, password) => {
             try {
                 const user = await userRepository.getUserByEmail(email);
-    
+
                 if (!user) {
                     throw new CustomError("User not found", 404);
                 }
-                
+
                 let isMatch = await comparePassword(password, user.password);
-                if(isMatch){
+                if (isMatch) {
                     throw new CustomError('Invalid Crendentails', 406)
                 }
 
@@ -25,30 +25,30 @@ export const authServices = {
                     generateRefreshToken(user._id, user.role)
                 ]);
 
-                return {accessToken, refreshToken};
-            
-                
+                return { accessToken, refreshToken };
+
+
             } catch (error) {
                 throw new CustomError(error.message, 500);
             }
         },
-    
-        userRegister : async (userDetails) => {
-    
-           try {
-            const isExist = await userRepository.isExistsUser(userDetails.email);
-    
-            if(isExist) {
-                throw new CustomError('User Arleady Exists', 409);
+
+        userRegister: async (userDetails) => {
+
+            try {
+                const isExist = await userRepository.isExistsUser(userDetails.email);
+
+                if (isExist) {
+                    throw new CustomError('User Arleady Exists', 409);
+                }
+                userDetails.password = await hashPassword(userDetails.password);
+
+                await userRepository.createUser(userDetails);
+                return userDetails;
+            } catch (error) {
+                throw new CustomError(error.message, 500);
             }
-            userDetails.password = await hashPassword(userDetails.password);
-    
-            await userRepository.createUser(userDetails);
-            return userDetails;
-           } catch (error) {
-            throw new CustomError(error.message, 500);
-           }
-    
+
         },
 
         refreshToken: async (refreshToken) => {
@@ -66,7 +66,7 @@ export const authServices = {
     },
 
     doctorAuthServices: {
-        doctorRegister : async (doctorData) => {
+        doctorRegister: async (doctorData) => {
             try {
                 let doctor = await doctorRepository.createDoctor(doctorData);
                 return doctor;
@@ -75,7 +75,7 @@ export const authServices = {
             }
         },
 
-        doctorLogin : async (email, password) => {
+        doctorLogin: async (email, password) => {
             try {
                 const doctor = await doctorRepository.getDoctorByEmail(email);
 
@@ -84,7 +84,7 @@ export const authServices = {
                 }
 
                 let isMatch = await comparePassword(password, doctor.password);
-                if(isMatch){
+                if (isMatch) {
                     throw new CustomError('Invalid Crendentails', 406)
                 }
 
@@ -93,7 +93,7 @@ export const authServices = {
                     generateRefreshToken(doctor._id, doctor.role)
                 ]);
 
-                return {accessToken, refreshToken};
+                return { accessToken, refreshToken };
 
 
             } catch (error) {
@@ -118,5 +118,60 @@ export const authServices = {
 
     medicalAuthServices: {
 
+    },
+    adminAuthServices: {
+        adminLogin: async (email, password) => {
+            try {
+                const admin = await adminRepository.getAdminByEmail(email);
+
+                if (!admin) {
+                    throw new CustomError("Admin not found", 404);
+                }
+
+                let isMatch = await comparePassword(password, admin.password);
+                if (isMatch) {
+                    throw new CustomError('Invalid Credentials', 406)
+                }
+
+                const [accessToken, refreshToken] = await Promise.all([
+                    generateAccessToken(admin._id, admin.role),
+                    generateRefreshToken(admin._id, admin.role)
+                ]);
+
+                return { accessToken, refreshToken };
+
+            } catch (error) {
+                throw new CustomError(error.message, 500);
+            }
+        },
+
+        adminRegister: async (adminData) => {
+            try {
+                const isExist = await adminRepository.isExistsAdmin(adminData.email);
+
+                if (isExist) {
+                    throw new CustomError('Admin Already Exists', 409);
+                }
+                adminData.password = await hashPassword(adminData.password);
+
+                let admin = await adminRepository.createAdmin(adminData);
+                return admin;
+            } catch (error) {
+                throw new CustomError(error.message, 500);
+            }
+        },
+
+        adminRefreshToken: async (refreshToken) => {
+            try {
+                const decoded = await decodeRefreshToken(refreshToken);
+                const accessToken = await generateAccessToken(decoded.userId, decoded.role);
+                return accessToken;
+            } catch (error) {
+                throw new CustomError(
+                    error.message,
+                    500,
+                )
+            }
+        }
     }
 }

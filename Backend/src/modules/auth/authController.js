@@ -5,11 +5,11 @@ import { authServices } from "./authServices.js";
 export const authController = {
 
     // User Login
-    userLogin : async (req, res, next) => {
-        const {email, password} = req.body;
+    userLogin: async (req, res, next) => {
+        const { email, password } = req.body;
         try {
-    
-            const [accessToken, refreshToken]  = await authServices.patientAuthServices.userLogin(email, password);
+
+            const [accessToken, refreshToken] = await authServices.patientAuthServices.userLogin(email, password);
 
             res.cookie('patientRefreshToken', refreshToken, {
                 httpOnly: true,
@@ -23,7 +23,7 @@ export const authController = {
                 sameSite: 'Lax',
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });
-    
+
             return res
                 .status(200)
                 .json({
@@ -38,26 +38,26 @@ export const authController = {
     },
 
     // User Registration 
-    userRegister : async (req, res, next) => {
+    userRegister: async (req, res, next) => {
         const { userDetails } = req.body;
 
-       try {
-        const result = authServices.patientAuthServices.userRegister(userDetails);
-        if(result){
-            res.status(200).json({
-                success: true,
-                message: "User Registered Successfully",
-                data: result
-            })
-        
+        try {
+            const result = authServices.patientAuthServices.userRegister(userDetails);
+            if (result) {
+                res.status(200).json({
+                    success: true,
+                    message: "User Registered Successfully",
+                    data: result
+                })
+
+            }
+        } catch (error) {
+            next(error)
         }
-       } catch (error) {
-        next(error)
-       }
 
     },
 
-    userRefreshToken : async (req, res, next) => {
+    userRefreshToken: async (req, res, next) => {
         try {
             const { patientRefreshToken } = req.cookies;
             if (!patientRefreshToken) {
@@ -88,7 +88,7 @@ export const authController = {
         }
     },
 
-    userLogout : async (req, res, next) => {
+    userLogout: async (req, res, next) => {
         try {
             res.clearCookie('patientRefreshToken');
             res.clearCookie('patientAccessToken');
@@ -103,11 +103,11 @@ export const authController = {
         }
     },
 
-    doctorRegister : async (req, res, next) => {
-        const {doctorData} =  req.body;
+    doctorRegister: async (req, res, next) => {
+        const { doctorData } = req.body;
         try {
             let result = await authServices.doctorAuthServices.doctorRegister(doctorData);
-            if(result){
+            if (result) {
                 res.status(200).json({
                     success: true,
                     message: "Doctor Registered Successfully",
@@ -119,10 +119,10 @@ export const authController = {
         }
     },
 
-    doctorLogin: async(req, res, next) => {
-        const {email, password} = req.body;
+    doctorLogin: async (req, res, next) => {
+        const { email, password } = req.body;
         try {
-            if(!email || !password){
+            if (!email || !password) {
                 return res
                     .status(400)
                     .json({
@@ -132,7 +132,7 @@ export const authController = {
             }
             const [accessToken, refreshToken] = await authServices.doctorAuthServices.doctorLogin(email, password);
 
-            
+
             res.cookie('doctorRefreshToken', refreshToken, {
                 httpOnly: true,
                 secure: false,
@@ -202,6 +202,109 @@ export const authController = {
         } catch (error) {
             next(error)
         }
-    }
+    },
 
+    // Admin Login
+    adminLogin: async (req, res, next) => {
+        const { email, password } = req.body;
+        try {
+            if (!email || !password) {
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        message: 'Please provide email and password',
+                    })
+            }
+            const [accessToken, refreshToken] = await authServices.adminAuthServices.adminLogin(email, password);
+
+            res.cookie('adminRefreshToken', refreshToken, {
+                httpOnly: true,
+                secure: false,
+                sameSite: 'Lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+            });
+            res.cookie('adminAccessToken', accessToken, {
+                httpOnly: true,
+                secure: false,
+                sameSite: 'Lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+            });
+
+            return res
+                .status(200)
+                .json({
+                    success: true,
+                    message: "Admin Login Successfully"
+                })
+
+        } catch (error) {
+            next(error)
+        }
+    },
+
+    // Admin Refresh Token
+    adminRefreshToken: async (req, res, next) => {
+        try {
+            const { adminRefreshToken } = req.cookies;
+            if (!adminRefreshToken) {
+                return res
+                    .status(401)
+                    .json({
+                        success: false,
+                        message: 'Unauthorised',
+                    })
+            }
+            const result = await authServices.adminAuthServices.adminRefreshToken(adminRefreshToken);
+            if (!result) {
+                return res
+                    .status(401)
+                    .json({
+                        success: false,
+                        message: 'Unauthorised',
+                    })
+            }
+            return res
+                .status(200)
+                .json({
+                    success: true,
+                    accessToken: result
+                })
+        } catch (error) {
+            next(error)
+        }
+    },
+
+    // Admin Logout
+    adminLogout: async (req, res, next) => {
+        try {
+            res.clearCookie('adminRefreshToken');
+            res.clearCookie('adminAccessToken');
+            return res
+                .status(200)
+                .json({
+                    success: true,
+                    message: "Admin Logout Successfully",
+                })
+        } catch (error) {
+            next(error)
+        }
+    },
+
+    // Admin Registration
+    adminRegister: async (req, res, next) => {
+        const { adminData } = req.body;
+        try {
+            let result = await authServices.adminAuthServices.adminRegister(adminData);
+            if (result) {
+                res.status(200).json({
+                    success: true,
+                    message: "Admin Registered Successfully",
+                    data: result
+                })
+            }
+        } catch (error) {
+            next(error)
+        }
+    }
 }
