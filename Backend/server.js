@@ -5,7 +5,8 @@ import corsConfig from './src/config/corsConfig.js';
 import connectMongoDB from './src/config/dbConfig.js';
 import { appConfig } from './src/config/appConfig.js';
 
-
+import aiAnalyseRoute from './src/modules/aiAnalys/aiRouter.js'
+import errorHandler from './src/middleware/errorHandler.js';
 
 const { port } = appConfig.app
 const app = express();
@@ -14,7 +15,14 @@ app.use(cookieParser);
 app.use(express.json());
 app.use(corsConfig);
 
-app.use('/api/auth', authRoutre);
+app.get('/', (req, res) => {
+    console.log('hello')
+    res.end('Hello World!');
+})
+// app.use('/api/auth', authRoutre);
+// app.use('/analys' , aiAnalyseRoute)
+
+app.use(errorHandler)
 
 app.listen(port, async () => {
     try {
@@ -26,5 +34,4 @@ app.listen(port, async () => {
     }
 })
 
-app.use(errorHandler)
 

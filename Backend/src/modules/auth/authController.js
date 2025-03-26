@@ -105,6 +105,7 @@ export const authController = {
 
     doctorRegister: async (req, res, next) => {
         const { doctorData } = req.body;
+        console.log(doctorData);
         try {
             let result = await authServices.doctorAuthServices.doctorRegister(doctorData);
             if (result) {

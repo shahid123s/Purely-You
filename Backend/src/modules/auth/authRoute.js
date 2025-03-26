@@ -3,15 +3,17 @@ import { authController } from './authController.js';
 const router = express.Router();
 
 // User Authentication Routes
-// router.post('/user/login','');
+router.post('/user/login',authController.userLogin);
 router.post('/user/register', authController.userRegister);
 
 // Doctor Authentication Routes
-// router.post('/doctor/login','');
+router.post('/doctor/login',authController.doctorLogin);
+router.post('/doctor/register', authController.doctorRegister);
 
 
-// Medicall Authentication Routes
-// router.post('/medical/login', '');
+// Admin Authentication Routes
+router.post('/admin/login', authController.adminLogin);
+router.post('/admin/register', authController.adminRegister);
 
 
 export default router;
