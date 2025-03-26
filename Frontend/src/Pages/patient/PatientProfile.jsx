@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Header from "../../Components/Header";
 
-export default function ProfilePage() {
+export default function PatientProfile() {
   const [activeTab, setActiveTab] = useState("appointments");
   const [appointments, setAppointments] = useState([
     {

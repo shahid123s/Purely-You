@@ -5,7 +5,7 @@ import { SearchResults } from "./components/SearchResult"
 import { AIAssistant } from "./components/AIAssistance"
 import axios from 'axios'
 
-function Dummy() {
+export default function AISearch() {
     const [query, setQuery] = useState("")
     const [isSearching, setIsSearching] = useState(false)
     const [results, setResults] = useState([])
@@ -54,5 +54,6 @@ function Dummy() {
     )
 }
 
-export default Dummy
 
+
+ 
