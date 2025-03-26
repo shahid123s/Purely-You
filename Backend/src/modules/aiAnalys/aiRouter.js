@@ -3,6 +3,6 @@ import { aiAnalyserController } from './aiController.js';
 const router = express.Router();
 
 
-router.post('/analyze', aiAnalyserController)
+router.post('/analyse', aiAnalyserController)
 
 export default router;

@@ -1,37 +1,38 @@
 import express from 'express';
-import authRoutre from './src/modules/auth/authRoute.js'
 import cookieParser from 'cookie-parser';
+import connectMongoDb from './src/config/dbConfig.js';
 import corsConfig from './src/config/corsConfig.js';
-import connectMongoDB from './src/config/dbConfig.js';
-import { appConfig } from './src/config/appConfig.js';
-
-import aiAnalyseRoute from './src/modules/aiAnalys/aiRouter.js'
+import {appConfig} from './src/config/appConfig.js';
 import errorHandler from './src/middleware/errorHandler.js';
 
-const { port } = appConfig.app
+// Routers
+// import authRouter from './src/module/auth/authRoute.js';
+// import courseRouter from './src/module/course/courseRoute.js'
+// import studentRouter from './src/module/student/studentRoute.js'  
+import aiRoute from './src/modules/aiAnalys/aiRouter.js'
+const {port} = appConfig.app
+
 const app = express();
 
-app.use(cookieParser);
+app.use(cookieParser());
 app.use(express.json());
 app.use(corsConfig);
 
 app.get('/', (req, res) => {
-    console.log('hello')
     res.end('Hello World!');
-})
-// app.use('/api/auth', authRoutre);
-// app.use('/analys' , aiAnalyseRoute)
+}) 
+app.use('/analyse',aiRoute )
 
 app.use(errorHandler)
+console.log('here')
+
 
 app.listen(port, async () => {
-    try {
-        await connectMongoDB();
-        process.stdout.write(`Server is running on port ${port}\n`);
-    } catch (error) {
-        process.stderr.write(`Failed to start server: ${error.message}\n`);
-        process.exit(1);
-    }
-})
-
-
+  try {
+    await connectMongoDb();
+    process.stdout.write(`Server is running on port ${port}\n`);
+  } catch (error) {
+    process.stderr.write(`Failed to start server: ${error.message}\n`);
+    process.exit(1);
+  }
+});
