@@ -14,7 +14,7 @@ const app = express();
 app.use(cookieParser);
 app.use(express.json());
 app.use(corsConfig);
-
+console.log("hi")
 app.get('/', (req, res) => {
     console.log('hello')
     res.end('Hello World!');
