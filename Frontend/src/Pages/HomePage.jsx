@@ -1,9 +1,10 @@
-import { Link } from "react-router-dom";
-import Header from "../Components/Header";
-import AppointmentForm from "../components/AppointmentForm";
-import TeamSection from "../components/TeamSection";
+import { Link, useNavigate } from "react-router-dom";
+import Header from "../components/header/Header";
+import TeamSection from "../components/team/TeamSection";
 
 export default function HomePage() {
+
+  const navigate = useNavigate();
   return (
     <main>
       <Header />
@@ -25,12 +26,12 @@ export default function HomePage() {
                 and get the care you deserve.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <button className="px-8 py-3 bg-cyan-600 hover:bg-cyan-700 text-white text-lg font-medium rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
-                  Book Appointment
+                <button onClick={()=>navigate('/ai')} className="px-8 py-3 bg-cyan-600 hover:bg-cyan-700 text-white text-lg font-medium rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
+                  search your problems
                 </button>
-                <button className="px-8 py-3 bg-white text-gray-700 text-lg font-medium rounded-full border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
+                {/* <button className="px-8 py-3 bg-white text-gray-700 text-lg font-medium rounded-full border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
                   Learn More
-                </button>
+                </button> */}
               </div>
             </div>
             <div className="relative h-[400px] md:h-[500px] w-full">
@@ -45,28 +46,11 @@ export default function HomePage() {
       {/* Team Section */}
       <TeamSection />
 
-      {/* Appointment Form */}
-      <AppointmentForm
-        services={[
-          { value: "cardiology", label: "Cardiology" },
-          { value: "pediatrics", label: "Pediatrics" },
-          { value: "dermatology", label: "Dermatology" },
-          { value: "internal-medicine", label: "Internal Medicine" },
-          { value: "orthopedics", label: "Orthopedics" },
-        ]}
-        onSubmit={(formData) => {
-          // Handle form submission
-          console.log(Object.fromEntries(formData.entries()));
-          // You would typically send this data to your backend
-        }}
-        imageUrl="/placeholder.svg?height=600&width=400"
-      />
-
       {/* Navigation Links */}
       <section className="w-full bg-white py-12">
         <div className="container mx-auto px-4 md:px-6 max-w-7xl">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Link to="/profile" className="block">
+            <Link to="/patient" className="block">
               <div className="group p-6 bg-sky-50 rounded-xl hover:bg-sky-100 transition-colors cursor-pointer">
                 <h3 className="text-xl font-semibold text-cyan-700 mb-2">Patient Portal</h3>
                 <p className="text-gray-600">
@@ -80,7 +64,7 @@ export default function HomePage() {
                 <p className="text-gray-600">Meet our experienced doctors and specialists dedicated to your health.</p>
               </div>
             </Link>
-            <Link to="/doctor/dashboard" className="block">
+            <Link to="/doctor" className="block">
               <div className="group p-6 bg-sky-50 rounded-xl hover:bg-sky-100 transition-colors cursor-pointer">
                 <h3 className="text-xl font-semibold text-cyan-700 mb-2">Doctor Dashboard</h3>
                 <p className="text-gray-600">For healthcare providers to manage appointments and patient records.</p>

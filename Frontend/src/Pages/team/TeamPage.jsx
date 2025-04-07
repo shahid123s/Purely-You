@@ -1,5 +1,5 @@
-import Header from "../../Components/Header";
-import TeamSection from "../../components/TeamSection";
+import Header from "../../components/header/Header";
+import TeamSection from "../../components/team/TeamSection";
 
 export default function TeamPage() {
   return (

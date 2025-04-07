@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 export default function Header() {
   return (
@@ -30,24 +30,36 @@ export default function Header() {
         </div>
 
         <nav className="hidden md:flex items-center space-x-6">
-          <Link to="#" className="text-cyan-600 font-medium">
+          <NavLink 
+            to="/" 
+            className={({ isActive }) => 
+              `font-medium ${
+                isActive ? 'text-cyan-600' : 'text-gray-600 hover:text-cyan-600'
+              }`
+            }
+          >
             Home
-          </Link>
-          <Link to="#" className="text-gray-600 hover:text-cyan-600">
-            About us
-          </Link>
-          <Link to="#" className="text-gray-600 hover:text-cyan-600">
-            Departments
-          </Link>
-          <Link to="#" className="text-gray-600 hover:text-cyan-600">
+          </NavLink>
+          <NavLink
+            to="/ai"
+            className={({ isActive }) => 
+              `font-medium ${
+                isActive ? 'text-cyan-600' : 'text-gray-600 hover:text-cyan-600'
+              }`
+            }
+          >
+            AI
+          </NavLink>
+          <NavLink
+            to="/team"
+            className={({ isActive }) => 
+              `font-medium ${
+                isActive ? 'text-cyan-600' : 'text-gray-600 hover:text-cyan-600'
+              }`
+            }
+          >
             Doctors
-          </Link>
-          <Link to="#" className="text-gray-600 hover:text-cyan-600">
-            Gallery
-          </Link>
-          <Link to="#" className="text-gray-600 hover:text-cyan-600">
-            Contact us
-          </Link>
+          </NavLink>
         </nav>
 
         <button className="bg-navy-800 hover:bg-navy-900 text-white rounded-full px-6 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">

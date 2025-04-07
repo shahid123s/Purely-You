@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import Header from "../../Components/Header";
+import Header from "../../components/header/Header";
 
 export default function PatientLogin() {
   const [email, setEmail] = useState("");
@@ -8,7 +8,6 @@ export default function PatientLogin() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle login logic
     console.log({ email, password });
   };
 

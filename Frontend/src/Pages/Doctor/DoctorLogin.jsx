@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import Header from "../../Components/Header";
+import Header from "../../components/header/Header";
 
 export default function DoctorLogin() {
   const [email, setEmail] = useState("");

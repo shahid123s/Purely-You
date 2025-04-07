@@ -1,9 +1,10 @@
 
 import { useState } from "react"
-import { SearchBar } from "./components/SearchBar"
-import { SearchResults } from "./components/SearchResult"
-import { AIAssistant } from "./components/AIAssistance"
+import { SearchBar } from "../components/ai/SearchBar"
+import { SearchResults } from "../components/ai/SearchResult"
+import { AIAssistant } from "../components/ai/AIAssistance"
 import axios from 'axios'
+import Header from "../components/header/Header"
 
 export default function AISearch() {
     const [query, setQuery] = useState("")
@@ -23,6 +24,7 @@ export default function AISearch() {
   
     return (
       <div className="min-h-screen bg-sky-50 text-gray-800">
+        <Header/>
         <div className="container mx-auto px-4 py-12">
           <header className="text-center mb-12">
             <div className="inline-block px-3 py-1 bg-sky-100 text-teal-600 rounded-full text-sm font-medium mb-4">

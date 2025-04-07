@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Header from "../../Components/Header";
+import Header from "../../components/header/Header";
 import { Check } from 'lucide-react'
 export default function DoctorDashboard() {
   const [activeTab, setActiveTab] = useState("today");
