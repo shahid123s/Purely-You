@@ -10,9 +10,12 @@ import errorHandler from './src/middleware/errorHandler.js';
 // import courseRouter from './src/module/course/courseRoute.js'
 // import studentRouter from './src/module/student/studentRoute.js'  
 import aiRoute from './src/modules/aiAnalys/aiRouter.js'
+import morgan from 'morgan';
 const {port} = appConfig.app
 
 const app = express();
+
+app.use(morgan('dev'))
 
 app.use(cookieParser());
 app.use(express.json());

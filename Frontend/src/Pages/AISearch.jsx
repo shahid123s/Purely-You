@@ -4,11 +4,13 @@ import { SearchResults } from "../components/ai/SearchResult"
 import { AIAssistant } from "../components/ai/AIAssistance"
 import axios from 'axios'
 import Header from "../components/header/Header"
+import { Navigate, useNavigate } from "react-router-dom"
 
 export default function AISearch() {
     const [query, setQuery] = useState("")
     const [isSearching, setIsSearching] = useState(false)
     const [results, setResults] = useState([])
+    const navigate = useNavigate()
   
     const handleSearch = async (searchQuery) => {
       setQuery(searchQuery)
@@ -47,7 +49,9 @@ export default function AISearch() {
                   {/* Search Doctor Button */}
                   {results && results.exact_matches?.length > 0 && (
                     <div className="text-center mt-8">
-                      <button className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors">
+                      <button className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors"
+                        onClick={() => navigate('/team') }
+                      >
                         Search for a Specialist Doctor
                       </button>
                     </div>

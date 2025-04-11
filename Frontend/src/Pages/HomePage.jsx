@@ -26,7 +26,7 @@ export default function HomePage() {
                 and get the care you deserve.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <button onClick={()=>navigate('/ai')} className="px-8 py-3 bg-cyan-600 hover:bg-cyan-700 text-white text-lg font-medium rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
+                <button onClick={()=>navigate('/ai')} className="px-8 py-3 bg-cyan-600 hover:bg-cyan-700 text-white text-lg font-medium rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 capitalize focus:ring-cyan-500">
                   search your problems
                 </button>
                 {/* <button className="px-8 py-3 bg-white text-gray-700 text-lg font-medium rounded-full border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">

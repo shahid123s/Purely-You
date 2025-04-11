@@ -22,9 +22,6 @@ export const aiAnalyserController = async (req, res, next) => {
                 'Content-Type': 'application/json'  // Change content type to JSON
             }
         });
-
-        console.log(result.data);
-
         // Send response back to client
         return res.status(200).json({
             success: true,
