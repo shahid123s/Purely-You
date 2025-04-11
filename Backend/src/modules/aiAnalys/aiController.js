@@ -23,6 +23,8 @@ export const aiAnalyserController = async (req, res, next) => {
             }
         });
 
+        console.log(result.data);
+
         // Send response back to client
         return res.status(200).json({
             success: true,

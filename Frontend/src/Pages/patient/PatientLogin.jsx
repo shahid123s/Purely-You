@@ -23,7 +23,7 @@ export default function PatientLogin() {
             </p>
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            <div className="rounded-md shadow-sm space-y-4">
+            <div className="rounded-md shadow-sm space-y-4 py-5 px-2">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Email address

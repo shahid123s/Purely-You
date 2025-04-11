@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { SearchBar } from "../components/ai/SearchBar"
 import { SearchResults } from "../components/ai/SearchResult"
@@ -13,13 +12,12 @@ export default function AISearch() {
   
     const handleSearch = async (searchQuery) => {
       setQuery(searchQuery)
-      console.log( searchQuery)
       setIsSearching(true)
       const result = await axios.post('http://localhost:3001/analyse/analyse', {
         input: searchQuery
-    });
-    setResults(result.data.data)
-    setIsSearching(false)
+      });
+      setResults(result.data.data)
+      setIsSearching(false)
     }
   
     return (
@@ -44,18 +42,23 @@ export default function AISearch() {
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-600"></div>
                 </div>
               ) : query ? (
-                <SearchResults results={results} />
+                <>
+                  <SearchResults results={results} />
+                  {/* Search Doctor Button */}
+                  {results && results.exact_matches?.length > 0 && (
+                    <div className="text-center mt-8">
+                      <button className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors">
+                        Search for a Specialist Doctor
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <AIAssistant />
               )}
             </div>
-  
           </div>
         </div>
       </div>
     )
 }
-
-
-
- 
