@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import Header from "../../components/header/Header";
 
+
+
 export default function PatientProfile() {
   const [activeTab, setActiveTab] = useState("appointments");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -98,6 +100,11 @@ export default function PatientProfile() {
   const [availableDates, setAvailableDates] = useState([]);
   const [availableTimes, setAvailableTimes] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+
+  useEffect(() => {
+
+  },[]) 
 
   // Filter doctors based on selected specialty
   useEffect(() => {

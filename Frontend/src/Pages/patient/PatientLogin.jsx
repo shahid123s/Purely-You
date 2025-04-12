@@ -1,14 +1,28 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "../../components/header/Header";
+import axios from "axios";
+import { toast } from "sonner";
 
 export default function PatientLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate  = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ email, password });
+
+    try {
+      const result = await axios.post('http://localhost:3001/api/auth/user/login' , {email, password})
+      
+      toast.success(result.data.message)
+      navigate('/patient/profile')
+
+    } catch (error) {
+      toast.error(error.response.data.message)
+    } 
+
+
   };
 
   return (

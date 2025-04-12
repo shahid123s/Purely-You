@@ -22,6 +22,7 @@
     "react-pro-sidebar": "^1.1.0",
     "react-router-dom": "^7.4.0",
     "recharts": "^2.15.2",
+    "sonner": "^2.0.3",
     "tailwind": "^4.0.0"
   },
   "devDependencies": {

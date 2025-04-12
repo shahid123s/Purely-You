@@ -1,19 +1,37 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from 'axios'
 import Header from "../../components/header/Header";
+import { toast } from "sonner";
 
 export default function PatientSignup() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: '',
+    dob: "",
+    bloodGroup: "",
     password: "",
     confirmPassword: "",
   });
 
-  const handleSubmit = (e) => {
+  const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+  const today = new Date().toISOString().split("T")[0];
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle signup logic
-    console.log(formData);
+    try {
+      const result = await axios.post('http://localhost:3001/api/auth/user/register', { 
+        userDetails: formData 
+      });
+      if(result){
+        navigate('/patient')
+      }
+    } catch (error) {
+      console.log(error)
+      toast.error(error.response.data.message)
+    }
   };
 
   const handleChange = (e) => {
@@ -32,7 +50,7 @@ export default function PatientSignup() {
             </p>
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            <div className="rounded-md shadow-sm space-y-4">
+            <div className="rounded-md shadow-sm space-y-4 p-5">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                   Full Name
@@ -47,6 +65,7 @@ export default function PatientSignup() {
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                 />
               </div>
+
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Email address
@@ -62,6 +81,61 @@ export default function PatientSignup() {
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                 />
               </div>
+
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                  Phone Number
+                </label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  required
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                />
+              </div>
+
+              {/* New Fields */}
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <label htmlFor="dob" className="block text-sm font-medium text-gray-700">
+                    Date of Birth
+                  </label>
+                  <input
+                    id="dob"
+                    name="dob"
+                    type="date"
+                    required
+                    value={formData.dob}
+                    max={today}
+                    onChange={handleChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  />
+                </div>
+
+                <div className="flex-1">
+                  <label htmlFor="bloodGroup" className="block text-sm font-medium text-gray-700">
+                    Blood Group
+                  </label>
+                  <select
+                    id="bloodGroup"
+                    name="bloodGroup"
+                    required
+                    value={formData.bloodGroup}
+                    onChange={handleChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  >
+                    <option value="">Select Blood Group</option>
+                    {bloodGroups.map(group => (
+                      <option key={group} value={group}>{group}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              {/* End of New Fields */}
+
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
@@ -76,6 +150,7 @@ export default function PatientSignup() {
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                 />
               </div>
+
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                   Confirm Password
@@ -98,7 +173,7 @@ export default function PatientSignup() {
             >
               Create Account
             </button>
-            
+
             <div className="text-center text-sm">
               <span className="text-gray-600">Already have an account? </span>
               <Link

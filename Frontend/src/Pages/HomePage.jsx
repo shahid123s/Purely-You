@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/header/Header";
 import TeamSection from "../components/team/TeamSection";
+import HomeImage from '../assets/purelyYouHome.png'
 
 export default function HomePage() {
 
@@ -35,8 +36,10 @@ export default function HomePage() {
               </div>
             </div>
             <div className="relative h-[400px] md:h-[500px] w-full">
-              <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-2xl overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-sky-500/20"></div>
+              <div className="absolute inset-0  backdrop-blur-sm rounded-2xl overflow-hidden">
+                <div className="absolute inset-0 items-center flex bg-transparent">
+                <img src={HomeImage} alt="" />
+                </div>
               </div>
             </div>
           </div>
