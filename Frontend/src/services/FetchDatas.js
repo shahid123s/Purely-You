@@ -1,9 +1,9 @@
-import axiosInstance from "../utils/axios"
+import patientAxiosInstance from '../utils/patientAxios.js';
 
 export const fetchPatientProfile = async ( userId ) => {  
     try {   
 
-        const result = await axiosInstance.get('/patient/profile', {
+        const result = await patientAxiosInstance.get('/profile', {
             params: userId,
         })
         
@@ -11,6 +11,3 @@ export const fetchPatientProfile = async ( userId ) => {
         return error
     }
 }  
-
-
-

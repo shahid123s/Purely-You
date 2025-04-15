@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Header from "../../components/header/Header";
+import { fetchPatientProfile } from "../../services/FetchDatas";
 
 
 
@@ -103,7 +104,7 @@ export default function PatientProfile() {
 
 
   useEffect(() => {
-
+    fetchPatientProfile();
   },[]) 
 
   // Filter doctors based on selected specialty
