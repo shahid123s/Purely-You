@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../../components/header/Header";
-import axios from "axios";
 import { toast } from "sonner";
+import patientAxiosInstance from "../../utils/patientAxios";
 
 export default function PatientLogin() {
   const [email, setEmail] = useState("");
@@ -13,7 +13,7 @@ export default function PatientLogin() {
     e.preventDefault();
 
     try {
-      const result = await axios.post('http://localhost:3001/api/auth/user/login' , {email, password})
+      const result = await patientAxiosInstance.post('/auth/login', {email, password})
       
       toast.success(result.data.message)
       navigate('/patient/profile')

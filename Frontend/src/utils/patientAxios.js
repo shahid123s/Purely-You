@@ -1,13 +1,12 @@
-
 import axios from 'axios';
 import { toast } from 'sonner';
 
 const patientAxiosInstance = axios.create({
-  baseURL: 'http://localhost:3001/api',
+  baseURL: 'http://localhost:3001/api/patient',
   timeout: 5000,
 });
 
-export default axiosInstance;
+export default patientAxiosInstance;
 
 let isRefreshing = false;
 

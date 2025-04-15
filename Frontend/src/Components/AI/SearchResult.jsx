@@ -1,4 +1,10 @@
 export function SearchResults({ results }) {
+  
+
+  const serachUrl =  (name) => {
+    return  `https://www.google.com/search?q=${encodeURIComponent(name)}`;
+  }
+
 
   console.log(results)
   // Check if results is empty or doesn't have the expected structure
@@ -55,7 +61,7 @@ export function SearchResults({ results }) {
                 {match.products.map((product, productIndex) => (
                   <a
                     key={productIndex}
-                    href={product.link}
+                    href={serachUrl(product.name)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-start p-4 bg-sky-50 rounded-lg hover:bg-sky-100 transition-colors"

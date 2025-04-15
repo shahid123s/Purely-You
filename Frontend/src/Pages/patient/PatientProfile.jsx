@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import Header from "../../components/header/Header";
+import { fetchPatientProfile } from "../../services/FetchDatas";
+
 
 export default function PatientProfile() {
   const [activeTab] = useState("appointments");
@@ -102,6 +105,15 @@ export default function PatientProfile() {
   const [availableTimes, setAvailableTimes] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+<<<<<<< HEAD
+=======
+
+  useEffect(() => {
+    fetchPatientProfile();
+  },[]) 
+
+  // Filter doctors based on selected specialty
+>>>>>>> 7d621c0de8433c8fdca5075da97ff6a7771694a8
   useEffect(() => {
     if (bookingForm.specialty) {
       const filteredDoctors = doctors.filter(
