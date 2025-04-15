@@ -7,9 +7,9 @@ import PatientProfile from '../pages/patient/PatientProfile'
 export default function PatientRoutes() {
   return (
     <Routes>
-        <Route path="/" element={<PatientLogin />} />
+        <Route path="/login" element={<PatientLogin />} />
         <Route path="signup" element={<PatientSignup />} />
-        <Route path="profile" element={<PatientProfile />} />
+        <Route path="/" element={<PatientProfile />} />
         </Routes>
   )
 }

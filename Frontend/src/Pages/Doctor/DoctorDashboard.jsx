@@ -1,8 +1,12 @@
 import { useState } from "react";
 import Header from "../../components/header/Header";
-import { Check } from 'lucide-react'
+import { Check } from 'lucide-react';
+
 export default function DoctorDashboard() {
   const [activeTab, setActiveTab] = useState("today");
+  const [isMedicalRecordModalOpen, setIsMedicalRecordModalOpen] = useState(false);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
+  const [medicalRecord, setMedicalRecord] = useState("");
   const [appointments, setAppointments] = useState([
     {
       id: "apt-001",
@@ -13,6 +17,7 @@ export default function DoctorDashboard() {
       time: "9:00 AM",
       reason: "Annual checkup",
       status: "scheduled",
+      medicalRecord: "",
     },
     {
       id: "apt-002",
@@ -23,6 +28,7 @@ export default function DoctorDashboard() {
       time: "10:30 AM",
       reason: "Follow-up consultation",
       status: "scheduled",
+      medicalRecord: "",
     },
     {
       id: "apt-003",
@@ -33,6 +39,7 @@ export default function DoctorDashboard() {
       time: "1:00 PM",
       reason: "Skin condition assessment",
       status: "scheduled",
+      medicalRecord: "",
     },
     {
       id: "apt-004",
@@ -43,6 +50,7 @@ export default function DoctorDashboard() {
       time: "11:15 AM",
       reason: "Chest pain evaluation",
       status: "completed",
+      medicalRecord: "Patient reports reduced chest pain. ECG normal.",
     },
     {
       id: "apt-005",
@@ -53,19 +61,45 @@ export default function DoctorDashboard() {
       time: "2:45 PM",
       reason: "Medication review",
       status: "no-show",
+      medicalRecord: "",
     },
   ]);
 
   const completeAppointment = (id) => {
-    setAppointments(appointments.map((apt) => (apt.id === id ? { ...apt, status: "completed" } : apt)));
+    setSelectedAppointmentId(id);
+    setMedicalRecord("");
+    setIsMedicalRecordModalOpen(true);
+  };
+
+  const handleMedicalRecordSubmit = (e) => {
+    e.preventDefault();
+    // Simulate backend API call
+    setAppointments(
+      appointments.map((apt) =>
+        apt.id === selectedAppointmentId
+          ? { ...apt, status: "completed", medicalRecord }
+          : apt
+      )
+    );
+    setIsMedicalRecordModalOpen(false);
+    setSelectedAppointmentId(null);
+    setMedicalRecord("");
   };
 
   const markNoShow = (id) => {
-    setAppointments(appointments.map((apt) => (apt.id === id ? { ...apt, status: "no-show" } : apt)));
+    setAppointments(
+      appointments.map((apt) =>
+        apt.id === id ? { ...apt, status: "no-show" } : apt
+      )
+    );
   };
 
-  const todaysAppointments = appointments.filter((apt) => apt.date === "March 26, 2025" && apt.status === "scheduled");
-  const pastAppointments = appointments.filter((apt) => apt.status === "completed" || apt.status === "no-show");
+  const todaysAppointments = appointments.filter(
+    (apt) => apt.date === "March 26, 2025" && apt.status === "scheduled"
+  );
+  const pastAppointments = appointments.filter(
+    (apt) => apt.status === "completed" || apt.status === "no-show"
+  );
 
   return (
     <main>
@@ -77,20 +111,12 @@ export default function DoctorDashboard() {
             <h1 className="text-2xl font-bold text-gray-900">Doctor Dashboard</h1>
             <p className="text-gray-600">Manage your appointments and patient records</p>
           </div>
-
           <div className="flex items-center space-x-2">
             <div className="relative h-10 w-10 rounded-full overflow-hidden">
               <img
                 src="/placeholder.svg"
                 alt="Dr. James Roberts"
                 className="object-cover w-full h-full"
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                }}
               />
             </div>
             <div>
@@ -102,7 +128,6 @@ export default function DoctorDashboard() {
 
         {/* Stats cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {/* Today's Appointments card */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
@@ -114,34 +139,32 @@ export default function DoctorDashboard() {
               </div>
             </div>
           </div>
-
-          {/* Completed card */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <p className="text-sm font-medium text-gray-500">Completed</p>
-                <p className="text-2xl font-bold">{appointments.filter((apt) => apt.status === "completed").length}</p>
+                <p className="text-2xl font-bold">
+                  {appointments.filter((apt) => apt.status === "completed").length}
+                </p>
               </div>
               <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
                 {/* Check icon */}
               </div>
             </div>
           </div>
-
-          {/* No-Shows card */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <p className="text-sm font-medium text-gray-500">No-Shows</p>
-                <p className="text-2xl font-bold">{appointments.filter((apt) => apt.status === "no-show").length}</p>
+                <p className="text-2xl font-bold">
+                  {appointments.filter((apt) => apt.status === "no-show").length}
+                </p>
               </div>
               <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center text-red-600">
                 {/* X icon */}
               </div>
             </div>
           </div>
-
-          {/* Total Patients card */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
@@ -198,7 +221,6 @@ export default function DoctorDashboard() {
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold">Today's Appointments</h2>
                   <div className="flex items-center space-x-2">
-                    {/* Search input */}
                     <div className="relative">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -221,7 +243,6 @@ export default function DoctorDashboard() {
                         className="pl-8 w-[250px] px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                       />
                     </div>
-                    {/* Status filter */}
                     <div className="relative">
                       <select className="w-[180px] px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 appearance-none bg-white">
                         <option value="all">All Appointments</option>
@@ -229,7 +250,6 @@ export default function DoctorDashboard() {
                         <option value="completed">Completed</option>
                         <option value="no-show">No-Show</option>
                       </select>
-                      {/* Dropdown arrow */}
                     </div>
                   </div>
                 </div>
@@ -249,13 +269,6 @@ export default function DoctorDashboard() {
                                   src={appointment.patientImage || "/placeholder.svg"}
                                   alt={appointment.patientName}
                                   className="object-cover w-full h-full"
-                                  style={{
-                                    position: "absolute",
-                                    top: 0,
-                                    left: 0,
-                                    width: "100%",
-                                    height: "100%",
-                                  }}
                                 />
                               </div>
                               <div>
@@ -267,31 +280,26 @@ export default function DoctorDashboard() {
                                 </div>
                                 <p className="text-sm text-gray-600">{appointment.reason}</p>
                                 <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                                  <div className="flex items-center">
-                                    {/* Clock icon */}
-                                    {appointment.time}
-                                  </div>
+                                  <div className="flex items-center">{appointment.time}</div>
                                 </div>
                               </div>
                             </div>
 
                             <div className="mt-4 md:mt-0 flex items-center space-x-2">
                               <button className="flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
-
                                 View Records
                               </button>
                               <button
                                 className="flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                                 onClick={() => completeAppointment(appointment.id)}
                               >
-                                <Check/>
+                                <Check />
                                 Complete
                               </button>
                               <button
                                 className="flex items-center px-3 py-1.5 border border-red-200 text-sm font-medium rounded text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                                 onClick={() => markNoShow(appointment.id)}
                               >
-                                {/* X icon */}
                                 No-Show
                               </button>
                             </div>
@@ -326,9 +334,7 @@ export default function DoctorDashboard() {
               <>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold">Past Appointments</h2>
-                  <div className="flex items-center space-x-2">
-                    {/* Search input */}
-                  </div>
+                  <div className="flex items-center space-x-2">{/* Search input */}</div>
                 </div>
 
                 <div className="space-y-4">
@@ -346,13 +352,6 @@ export default function DoctorDashboard() {
                                   src={appointment.patientImage || "/placeholder.svg"}
                                   alt={appointment.patientName}
                                   className="object-cover w-full h-full"
-                                  style={{
-                                    position: "absolute",
-                                    top: 0,
-                                    left: 0,
-                                    width: "100%",
-                                    height: "100%",
-                                  }}
                                 />
                               </div>
                               <div>
@@ -364,29 +363,21 @@ export default function DoctorDashboard() {
                                       appointment.status === "completed"
                                         ? "bg-green-100 text-green-800"
                                         : "bg-red-100 text-red-800"
-                                    }
-                                  `}
+                                    }`}
                                   >
                                     {appointment.status === "completed" ? "Completed" : "No-Show"}
                                   </span>
                                 </div>
                                 <p className="text-sm text-gray-600">{appointment.reason}</p>
                                 <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                                  <div className="flex items-center">
-                                    {/* Calendar icon */}
-                                    {appointment.date}
-                                  </div>
-                                  <div className="flex items-center">
-                                    {/* Clock icon */}
-                                    {appointment.time}
-                                  </div>
+                                  <div className="flex items-center">{appointment.date}</div>
+                                  <div className="flex items-center">{appointment.time}</div>
                                 </div>
                               </div>
                             </div>
 
                             <div className="mt-4 md:mt-0 flex items-center space-x-2">
                               <button className="flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
-                                {/* Document icon */}
                                 View Records
                               </button>
                             </div>
@@ -407,6 +398,74 @@ export default function DoctorDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Medical Record Modal */}
+      {isMedicalRecordModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={() => setIsMedicalRecordModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-lg p-6 w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Enter Medical Record</h2>
+              <button
+                onClick={() => setIsMedicalRecordModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleMedicalRecordSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Medical Record Notes
+                </label>
+                <textarea
+                  value={medicalRecord}
+                  onChange={(e) => setMedicalRecord(e.target.value)}
+                  rows="5"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+                  placeholder="Enter medical notes for this appointment..."
+                  required
+                />
+              </div>
+
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsMedicalRecordModalOpen(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -1,3 +1,4 @@
+
 import { NavLink } from "react-router-dom";
 
 export default function Header() {
@@ -62,9 +63,24 @@ export default function Header() {
           </NavLink>
         </nav>
 
-        <button className="bg-navy-800 hover:bg-navy-900 text-white rounded-full px-6 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
-          Book Appointment
-        </button>
+        <div className="hidden md:flex items-center space-x-4">
+          <NavLink
+            to="/patient/login"
+            className={({ isActive }) => 
+              `font-medium ${
+                isActive ? 'text-cyan-600' : 'text-gray-600 hover:text-cyan-600'
+              }`
+            }
+          >
+            Login
+          </NavLink>
+          <NavLink
+            to="/patient/signup"
+            className="bg-cyan-600 hover:bg-cyan-700 text-white rounded-full px-6 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
+          >
+            Signup
+          </NavLink>
+        </div>
       </div>
     </header>
   );
