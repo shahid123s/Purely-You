@@ -7,9 +7,10 @@ export const authController = {
     // User Login
     userLogin: async (req, res, next) => {
         const { email, password } = req.body;
+        console.log(email, password, req.body, 'User Login in Controller')
         try {
 
-            const [accessToken, refreshToken] = await authServices.patientAuthServices.userLogin(email, password);
+            const {accessToken, refreshToken} = await authServices.patientAuthServices.userLogin(email, password);
 
             res.cookie('patientRefreshToken', refreshToken, {
                 httpOnly: true,
@@ -29,7 +30,7 @@ export const authController = {
                 .json({
                     success: true,
                     message: "User Login Successfully",
-                    username,
+                    accessToken,
                 })
 
         } catch (error) {
@@ -41,8 +42,12 @@ export const authController = {
     userRegister: async (req, res, next) => {
         const { userDetails } = req.body;
 
+
         try {
-            const result = authServices.patientAuthServices.userRegister(userDetails);
+            if(!userDetails) {
+                return res.status(404).json({success: false, message: "Give All Data to Register"})
+            }
+            const result = await authServices.patientAuthServices.userRegister(userDetails);
             if (result) {
                 res.status(200).json({
                     success: true,
@@ -108,13 +113,15 @@ export const authController = {
         console.log(doctorData);
         try {
             let result = await authServices.doctorAuthServices.doctorRegister(doctorData);
+            console.log(result)
             if (result) {
-                res.status(200).json({
+                return res.status(200).json({
                     success: true,
                     message: "Doctor Registered Successfully",
                     data: result
                 })
             }
+            return res.status(500).json({succes: false})
         } catch (error) {
             next(error)
         }

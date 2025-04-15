@@ -6,12 +6,14 @@ import {appConfig} from './src/config/appConfig.js';
 import errorHandler from './src/middleware/errorHandler.js';
 
 // Routers
-// import authRouter from './src/module/auth/authRoute.js';
-// import courseRouter from './src/module/course/courseRoute.js'
-// import studentRouter from './src/module/student/studentRoute.js'  
+import patientRoute from './src/modules/user/userRoute.js';
 import aiRoute from './src/modules/aiAnalys/aiRouter.js'
 import morgan from 'morgan';
+import { autheticateUser } from './src/middleware/userAuthMiddleware.js';
+import { patient } from './src/modules/auth/authRoute.js';
 const {port} = appConfig.app
+
+
 
 const app = express();
 
@@ -25,7 +27,8 @@ app.get('/', (req, res) => {
     res.end('Hello World!');
 }) 
 app.use('/analyse',aiRoute )
-
+app.use('/api/patient/auth', patient );
+app.use('/api/patient',autheticateUser, patientRoute)
 app.use(errorHandler)
 console.log('here')
 
