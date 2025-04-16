@@ -1,7 +1,134 @@
 import { useState, useEffect } from "react";
 import { fetchPatientProfile } from "../../services/FetchDatas";
 
+// Calendar component
+const Calendar = ({ selectedDate, onDateChange, availableDates }) => {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState(selectedDate ? new Date(selectedDate) : null);
+
+  // Get days in month
+  const daysInMonth = (month, year) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  // Get first day of month
+  const firstDayOfMonth = (month, year) => {
+    return new Date(year, month, 1).getDay();
+  };
+
+  // Check if date is available
+  const isDateAvailable = (date) => {
+    if (!availableDates || availableDates.length === 0) return false;
+    const dateStr = date.toISOString().split('T')[0];
+    return availableDates.some(d => d.value === dateStr);
+  };
+
+  // Handle date selection
+  const handleDateClick = (day) => {
+    const newDate = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth(),
+      day
+    );
+    
+    if (isDateAvailable(newDate)) {
+      setSelectedDay(newDate);
+      onDateChange(newDate.toISOString().split('T')[0]);
+    }
+  };
+
+  // Change month
+  const changeMonth = (increment) => {
+    setCurrentMonth(
+      new Date(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth() + increment,
+        1
+      )
+    );
+  };
+
+  // Generate calendar days
+  const renderDays = () => {
+    const month = currentMonth.getMonth();
+    const year = currentMonth.getFullYear();
+    const daysCount = daysInMonth(month, year);
+    const firstDay = firstDayOfMonth(month, year);
+    
+    const days = [];
+    let day = 1;
+
+    // Create empty cells for days before the first day of the month
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="w-10 h-10"></div>);
+    }
+
+    // Create cells for each day of the month
+    for (; day <= daysCount; day++) {
+      const currentDate = new Date(year, month, day);
+      const isAvailable = isDateAvailable(currentDate);
+      const isSelected = selectedDay && 
+        selectedDay.getDate() === day && 
+        selectedDay.getMonth() === month && 
+        selectedDay.getFullYear() === year;
+
+      days.push(
+        <button
+          key={`day-${day}`}
+          className={`w-10 h-10 rounded-full flex items-center justify-center text-sm
+            ${isSelected ? 'bg-cyan-600 text-white' : ''}
+            ${isAvailable ? 
+              (isSelected ? 'bg-cyan-600 text-white' : 'hover:bg-gray-100 cursor-pointer') : 
+              'text-gray-400 cursor-not-allowed'}
+          `}
+          onClick={() => isAvailable && handleDateClick(day)}
+          disabled={!isAvailable}
+        >
+          {day}
+        </button>
+      );
+    }
+
+    return days;
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow p-4">
+      <div className="flex justify-between items-center mb-4">
+        <button 
+          onClick={() => changeMonth(-1)}
+          className="p-2 rounded-full hover:bg-gray-100"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+          </svg>
+        </button>
+        <h3 className="font-medium">
+          {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+        </h3>
+        <button 
+          onClick={() => changeMonth(1)}
+          className="p-2 rounded-full hover:bg-gray-100"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+          </svg>
+        </button>
+      </div>
+      <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-500 mb-2">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div key={day}>{day}</div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {renderDays()}
+      </div>
+    </div>
+  );
+};
+
 export default function PatientProfile() {
+  const [activeTab] = useState("appointments");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
@@ -111,6 +238,8 @@ export default function PatientProfile() {
   const [availableTimes, setAvailableTimes] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingReschedules, setPendingReschedules] = useState({});
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [showRescheduleCalendar, setShowRescheduleCalendar] = useState(false);
 
   // Fetch available doctors based on specialty
   useEffect(() => {
@@ -235,12 +364,14 @@ export default function PatientProfile() {
       problem: "",
       notes: "",
     });
+    setShowCalendar(false);
   };
 
   const openRescheduleModal = (appointment) => {
     setSelectedAppointment(appointment);
     setIsRescheduleModalOpen(true);
     setRescheduleForm({ date: "", time: "", reason: "" });
+    setShowRescheduleCalendar(false);
   };
 
   const handleImageChange = (e) => {
@@ -908,21 +1039,34 @@ export default function PatientProfile() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Appointment Date
                   </label>
-                  <select
+                  <input
+                    type="text"
                     name="date"
-                    value={bookingForm.date}
-                    onChange={handleBookingChange}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+                    value={bookingForm.date ? 
+                      new Date(bookingForm.date).toLocaleDateString('en-US', { 
+                        weekday: 'short', 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      }) : ''}
+                    onClick={() => setShowCalendar(!showCalendar)}
+                    readOnly
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 cursor-pointer"
+                    placeholder="Select a date"
                     required
-                    disabled={!bookingForm.doctor}
-                  >
-                    <option value="">Select a date</option>
-                    {availableDates.map((date) => (
-                      <option key={date.value} value={date.value}>
-                        {date.display}
-                      </option>
-                    ))}
-                  </select>
+                  />
+                  {showCalendar && (
+                    <div className="mt-2 z-10">
+                      <Calendar
+                        selectedDate={bookingForm.date}
+                        onDateChange={(date) => {
+                          setBookingForm(prev => ({ ...prev, date }));
+                          setShowCalendar(false);
+                        }}
+                        availableDates={availableDates}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -1085,20 +1229,34 @@ export default function PatientProfile() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Appointment Date
                 </label>
-                <select
+                <input
+                  type="text"
                   name="date"
-                  value={rescheduleForm.date}
-                  onChange={handleRescheduleChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+                  value={rescheduleForm.date ? 
+                    new Date(rescheduleForm.date).toLocaleDateString('en-US', { 
+                      weekday: 'short', 
+                      month: 'short', 
+                      day: 'numeric', 
+                      year: 'numeric' 
+                    }) : ''}
+                  onClick={() => setShowRescheduleCalendar(!showRescheduleCalendar)}
+                  readOnly
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 cursor-pointer"
+                  placeholder="Select a date"
                   required
-                >
-                  <option value="">Select a date</option>
-                  {availableDates.map((date) => (
-                    <option key={date.value} value={date.value}>
-                      {date.display}
-                    </option>
-                  ))}
-                </select>
+                />
+                {showRescheduleCalendar && (
+                  <div className="mt-2 z-10">
+                    <Calendar
+                      selectedDate={rescheduleForm.date}
+                      onDateChange={(date) => {
+                        setRescheduleForm(prev => ({ ...prev, date }));
+                        setShowRescheduleCalendar(false);
+                      }}
+                      availableDates={availableDates}
+                    />
+                  </div>
+                )}
               </div>
 
               <div>
