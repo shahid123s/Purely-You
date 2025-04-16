@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
-import Header from "../../components/header/Header";
 import { fetchPatientProfile } from "../../services/FetchDatas";
 
-
 export default function PatientProfile() {
-  const [activeTab] = useState("appointments");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
   const [isMedicalRecordModalOpen, setIsMedicalRecordModalOpen] = useState(false);
   const [selectedMedicalRecord, setSelectedMedicalRecord] = useState("");
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [appointmentFilter, setAppointmentFilter] = useState("all");
   const [patient, setPatient] = useState({
     name: "Sarah Johnson",
@@ -22,6 +21,7 @@ export default function PatientProfile() {
   const [formData, setFormData] = useState({ ...patient });
   const [imagePreview, setImagePreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [notification, setNotification] = useState(null);
 
   const [doctors] = useState([
     {
@@ -100,11 +100,19 @@ export default function PatientProfile() {
     notes: "",
   });
 
+  const [rescheduleForm, setRescheduleForm] = useState({
+    date: "",
+    time: "",
+    reason: "",
+  });
+
   const [availableDoctors, setAvailableDoctors] = useState([]);
   const [availableDates, setAvailableDates] = useState([]);
   const [availableTimes, setAvailableTimes] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingReschedules, setPendingReschedules] = useState({});
 
+  // Fetch available doctors based on specialty
   useEffect(() => {
     fetchPatientProfile();
 
@@ -119,38 +127,53 @@ export default function PatientProfile() {
     }
   }, [bookingForm.specialty, doctors]);
 
+  // Fetch available dates for booking or rescheduling
   useEffect(() => {
+    let selectedDoctor = null;
     if (bookingForm.doctor) {
-      const selectedDoctor = doctors.find((doc) => doc.id === bookingForm.doctor);
-      if (selectedDoctor) {
-        const dates = [];
-        const today = new Date();
-        for (let i = 1; i <= 14; i++) {
-          const date = new Date();
-          date.setDate(today.getDate() + i);
-          const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
-          if (selectedDoctor.availableDays.includes(dayName)) {
-            dates.push({
-              value: date.toISOString().split("T")[0],
-              display: date.toLocaleDateString("en-US", {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              }),
-            });
-          }
+      selectedDoctor = doctors.find((doc) => doc.id === bookingForm.doctor);
+    } else if (selectedAppointment && isRescheduleModalOpen) {
+      selectedDoctor = doctors.find(
+        (doc) => doc.name === selectedAppointment.doctor
+      );
+    }
+
+    if (selectedDoctor) {
+      const dates = [];
+      const today = new Date();
+      for (let i = 1; i <= 14; i++) {
+        const date = new Date();
+        date.setDate(today.getDate() + i);
+        const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
+        if (
+          selectedDoctor.availableDays.includes(dayName) &&
+          dayName !== "Sunday"
+        ) {
+          dates.push({
+            value: date.toISOString().split("T")[0],
+            display: date.toLocaleDateString("en-US", {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            }),
+          });
         }
-        setAvailableDates(dates);
+      }
+      setAvailableDates(dates);
+      if (isRescheduleModalOpen) {
+        setRescheduleForm((prev) => ({ ...prev, date: "", time: "" }));
+      } else {
         setBookingForm((prev) => ({ ...prev, date: "", time: "" }));
       }
     } else {
       setAvailableDates([]);
     }
-  }, [bookingForm.doctor, doctors]);
+  }, [bookingForm.doctor, selectedAppointment, isRescheduleModalOpen, doctors]);
 
+  // Fetch available times when a date is selected
   useEffect(() => {
-    if (bookingForm.date) {
+    if (bookingForm.date || rescheduleForm.date) {
       const times = [];
       for (let hour = 9; hour <= 16; hour++) {
         times.push({
@@ -173,11 +196,15 @@ export default function PatientProfile() {
         };
       });
       setAvailableTimes(formattedTimes);
-      setBookingForm((prev) => ({ ...prev, time: "" }));
+      if (isRescheduleModalOpen) {
+        setRescheduleForm((prev) => ({ ...prev, time: "" }));
+      } else {
+        setBookingForm((prev) => ({ ...prev, time: "" }));
+      }
     } else {
       setAvailableTimes([]);
     }
-  }, [bookingForm.date]);
+  }, [bookingForm.date, rescheduleForm.date, isRescheduleModalOpen]);
 
   const cancelAppointment = (id) => {
     setAppointments(
@@ -208,6 +235,12 @@ export default function PatientProfile() {
       problem: "",
       notes: "",
     });
+  };
+
+  const openRescheduleModal = (appointment) => {
+    setSelectedAppointment(appointment);
+    setIsRescheduleModalOpen(true);
+    setRescheduleForm({ date: "", time: "", reason: "" });
   };
 
   const handleImageChange = (e) => {
@@ -263,12 +296,93 @@ export default function PatientProfile() {
       setAppointments([...appointments, newAppointment]);
       setIsBookingModalOpen(false);
       setIsSubmitting(false);
+      setNotification({
+        type: "success",
+        message: "Appointment booked successfully!",
+      });
+      setTimeout(() => setNotification(null), 3000);
     }, 1000);
+  };
+
+  const handleRescheduleSubmit = (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setPendingReschedules((prev) => ({
+      ...prev,
+      [selectedAppointment.id]: true,
+    }));
+
+    // Simulate API call
+    const dummyApiCall = () =>
+      new Promise((resolve, reject) => {
+        setTimeout(() => {
+          const success = Math.random() > 0.2; // 80% success rate for demo
+          if (success) {
+            resolve();
+          } else {
+            reject(new Error("Failed to reschedule appointment."));
+          }
+        }, 1500);
+      });
+
+    dummyApiCall()
+      .then(() => {
+        setAppointments(
+          appointments.map((apt) =>
+            apt.id === selectedAppointment.id
+              ? {
+                  ...apt,
+                  date: new Date(rescheduleForm.date).toLocaleDateString(
+                    "en-US",
+                    {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    }
+                  ),
+                  time: availableTimes.find(
+                    (t) => t.value === rescheduleForm.time
+                  ).display,
+                  status: "upcoming",
+                }
+              : apt
+          )
+        );
+        setIsRescheduleModalOpen(false);
+        setIsSubmitting(false);
+        setPendingReschedules((prev) => ({
+          ...prev,
+          [selectedAppointment.id]: false,
+        }));
+        setNotification({
+          type: "success",
+          message: "Appointment rescheduled successfully!",
+        });
+      })
+      .catch((error) => {
+        setIsSubmitting(false);
+        setPendingReschedules((prev) => ({
+          ...prev,
+          [selectedAppointment.id]: false,
+        }));
+        setNotification({
+          type: "error",
+          message: error.message,
+        });
+      })
+      .finally(() => {
+        setTimeout(() => setNotification(null), 3000);
+      });
   };
 
   const handleBookingChange = (e) => {
     const { name, value } = e.target;
     setBookingForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleRescheduleChange = (e) => {
+    const { name, value } = e.target;
+    setRescheduleForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const specialties = [...new Set(doctors.map((doc) => doc.specialty))];
@@ -281,6 +395,17 @@ export default function PatientProfile() {
   return (
     <main>
       <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Notification */}
+        {notification && (
+          <div
+            className={`fixed top-4 right-4 p-4 rounded-md shadow-lg text-white ${
+              notification.type === "success" ? "bg-green-600" : "bg-red-600"
+            }`}
+          >
+            {notification.message}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Profile Card */}
           <div className="lg:col-span-1">
@@ -389,15 +514,19 @@ export default function PatientProfile() {
                                   <h4 className="font-semibold">{appointment.doctor}</h4>
                                   <span
                                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                      appointment.status === "upcoming"
+                                      pendingReschedules[appointment.id]
+                                        ? "bg-yellow-100 text-yellow-800"
+                                        : appointment.status === "upcoming"
                                         ? "bg-green-100 text-green-800"
                                         : appointment.status === "completed"
                                         ? "bg-blue-100 text-blue-800"
                                         : "bg-red-100 text-red-800"
                                     }`}
                                   >
-                                    {appointment.status.charAt(0).toUpperCase() +
-                                      appointment.status.slice(1)}
+                                    {pendingReschedules[appointment.id]
+                                      ? "Pending Reschedule"
+                                      : appointment.status.charAt(0).toUpperCase() +
+                                        appointment.status.slice(1)}
                                   </span>
                                 </div>
                                 <p className="text-sm text-gray-600">{appointment.specialty}</p>
@@ -446,12 +575,27 @@ export default function PatientProfile() {
                               <div className="mt-4 md:mt-0 flex items-center space-x-2">
                                 {appointment.status === "upcoming" && (
                                   <>
-                                    <button className="px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
-                                      Reschedule
+                                    <button
+                                      onClick={() => openRescheduleModal(appointment)}
+                                      disabled={pendingReschedules[appointment.id]}
+                                      className={`px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 ${
+                                        pendingReschedules[appointment.id]
+                                          ? "opacity-50 cursor-not-allowed"
+                                          : ""
+                                      }`}
+                                    >
+                                      {pendingReschedules[appointment.id]
+                                        ? "Rescheduling..."
+                                        : "Reschedule"}
                                     </button>
                                     <button
-                                      className="px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                      className={`px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
+                                        pendingReschedules[appointment.id]
+                                          ? "opacity-50 cursor-not-allowed"
+                                          : ""
+                                      }`}
                                       onClick={() => cancelAppointment(appointment.id)}
+                                      disabled={pendingReschedules[appointment.id]}
                                     >
                                       Cancel
                                     </button>
@@ -895,6 +1039,142 @@ export default function PatientProfile() {
                     </>
                   ) : (
                     "Book Appointment"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reschedule Appointment Modal */}
+      {isRescheduleModalOpen && selectedAppointment && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={() => setIsRescheduleModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-lg p-6 w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Reschedule Appointment</h2>
+              <button
+                onClick={() => setIsRescheduleModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleRescheduleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Appointment Date
+                </label>
+                <select
+                  name="date"
+                  value={rescheduleForm.date}
+                  onChange={handleRescheduleChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+                  required
+                >
+                  <option value="">Select a date</option>
+                  {availableDates.map((date) => (
+                    <option key={date.value} value={date.value}>
+                      {date.display}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Appointment Time
+                </label>
+                <select
+                  name="time"
+                  value={rescheduleForm.time}
+                  onChange={handleRescheduleChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+                  required
+                  disabled={!rescheduleForm.date}
+                >
+                  <option value="">Select a time</option>
+                  {availableTimes.map((time) => (
+                    <option key={time.value} value={time.value}>
+                      {time.display}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Reason for Rescheduling (Optional)
+                </label>
+                <textarea
+                  name="reason"
+                  value={rescheduleForm.reason}
+                  onChange={handleRescheduleChange}
+                  rows="3"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+                  placeholder="e.g. Schedule conflict, personal reasons..."
+                />
+              </div>
+
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsRescheduleModalOpen(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Rescheduling...
+                    </>
+                  ) : (
+                    "Reschedule Appointment"
                   )}
                 </button>
               </div>

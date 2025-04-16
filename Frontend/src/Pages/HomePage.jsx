@@ -67,7 +67,7 @@ export default function HomePage() {
                 <p className="text-gray-600">Meet our experienced doctors and specialists dedicated to your health.</p>
               </div>
             </Link>
-            <Link to="/doctor" className="block">
+            <Link to="/doctor/login" className="block">
               <div className="group p-6 bg-sky-50 rounded-xl hover:bg-sky-100 transition-colors cursor-pointer">
                 <h3 className="text-xl font-semibold text-cyan-700 mb-2">Doctor Dashboard</h3>
                 <p className="text-gray-600">For healthcare providers to manage appointments and patient records.</p>
