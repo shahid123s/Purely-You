@@ -7,34 +7,48 @@ const patientAxiosInstance = axios.create({
   withCredentials: true,
 });
 
-export default patientAxiosInstance;
-
 let isRefreshing = false;
 
-patientAxiosInstance.interceptors.response.use(
-  (response)=> response,
-  async (error)=> {
-    const originalRequest = error.config;
-    if(error.status == 401 && !originalRequest._retry){
-      console.log('access token expire trigger');
-        originalRequest._retry = true;
-
-        if(!isRefreshing) {
-          isRefreshing = true;
-          try {
-            await patientAxiosInstance.post('/auth/refresh-token')
-            isRefreshing = false;
-
-            return patientAxiosInstance(originalRequest);
-          } catch (error) {
-            isRefreshing = false;
-
-            toast.info('please login again');
-            localStorage.removeItem('patientSession');
-            window.location.href = '/';
-            return Promise.reject(error)
-          }
-        }
+// Request interceptor to add auth token
+patientAxiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('patientToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-)
+);
+
+// Response interceptor
+patientAxiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      if (!isRefreshing) {
+        isRefreshing = true;
+        try {
+          const refreshResponse = await patientAxiosInstance.post('/auth/refresh-token');
+          localStorage.setItem('patientToken', refreshResponse.data.token);
+          isRefreshing = false;
+          return patientAxiosInstance(originalRequest);
+        } catch (refreshError) {
+          isRefreshing = false;
+          localStorage.removeItem('patientToken');
+          window.location.href = '/patient/login';
+          return Promise.reject(refreshError);
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default patientAxiosInstance;

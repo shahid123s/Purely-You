@@ -7,22 +7,20 @@ import patientAxiosInstance from "../../utils/patientAxios";
 export default function PatientLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate  = useNavigate()
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const result = await patientAxiosInstance.post('/auth/login', {email, password})
-      
-      toast.success(result.data.message)
-      navigate('/patient/profile')
-
+      const result = await patientAxiosInstance.post('/auth/login', {email, password});
+      toast.success(result.data.message);
+      // Store token in localStorage
+      localStorage.setItem('patientToken', result.data.token);
+      navigate('/patient/profile');
     } catch (error) {
-      toast.error(error.response.data.message)
-    } 
-
-
+      toast.error(error.response?.data?.message || 'Login failed');
+    }
   };
 
   return (
