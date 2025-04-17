@@ -16,7 +16,7 @@ export const authServices = {
                 }
 
                 let isMatch = await comparePassword(password, user.password);
-                if (isMatch) {
+                if (!isMatch) {
                     throw new CustomError('Invalid Crendentails', 406)
                 }
 
@@ -33,14 +33,14 @@ export const authServices = {
             }
         },
 
-        userRegister: async (userDetails) => {
+        userRegister: async (userDetails = {}) => {
 
-            try {
+            try { 
                 const isExist = await userRepository.isExistsUser(userDetails.email);
-
                 if (isExist) {
                     throw new CustomError('User Arleady Exists', 409);
                 }
+
                 userDetails.password = await hashPassword(userDetails.password);
 
                 await userRepository.createUser(userDetails);

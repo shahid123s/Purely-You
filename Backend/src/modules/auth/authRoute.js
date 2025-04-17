@@ -1,19 +1,21 @@
 import express from 'express';
 import { authController } from './authController.js';
-const router = express.Router();
+const patient = express.Router();
+const doctor = express.Router();
+const admin = express.Router();
 
 // User Authentication Routes
-router.post('/user/login',authController.userLogin);
-router.post('/user/register', authController.userRegister);
+patient.post('/login',authController.userLogin);
+patient.post('/register', authController.userRegister);
 
 // Doctor Authentication Routes
-router.post('/doctor/login',authController.doctorLogin);
-router.post('/doctor/register', authController.doctorRegister);
+doctor.post('/login',authController.doctorLogin);
+doctor.post('/register', authController.doctorRegister);
 
 
 // Admin Authentication Routes
-router.post('/admin/login', authController.adminLogin);
-router.post('/admin/register', authController.adminRegister);
+admin.post('/login', authController.adminLogin);
+admin.post('/register', authController.adminRegister);
 
 
-export default router;
+export {patient, doctor, admin}
