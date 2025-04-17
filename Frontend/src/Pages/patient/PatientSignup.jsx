@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from 'axios'
 import Header from "../../components/header/Header";
 import { toast } from "sonner";
+import patientAxiosInstance from "../../utils/patientAxios";
 
 export default function PatientSignup() {
   const navigate = useNavigate();
@@ -22,11 +23,11 @@ export default function PatientSignup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const result = await axios.post('http://localhost:3001/api/auth/user/register', { 
+      const result = await patientAxiosInstance.post('/auth/register', { 
         userDetails: formData 
       });
       if(result){
-        navigate('/patient')
+        navigate('/patient/login')
       }
     } catch (error) {
       console.log(error)

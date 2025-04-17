@@ -23,7 +23,7 @@ doctorAxiosInstance.interceptors.response.use(
         if(!isRefreshing) {
           isRefreshing = true;
           try {
-            await doctorAxiosInstance.post('/doctor/refresh')
+            await doctorAxiosInstance.post('/auht/refresh')
             isRefreshing = false;
 
             return doctorAxiosInstance(originalRequest);

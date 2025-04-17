@@ -1,9 +1,8 @@
-
 import axios from 'axios';
 import { toast } from 'sonner';
 
 const adminAxiosInstance = axios.create({
-  baseURL: 'http://localhost:3001/api',
+  baseURL: 'http://localhost:3001/api/admin',
   timeout: 5000,
 });
 
@@ -23,7 +22,7 @@ adminAxiosInstance.interceptors.response.use(
         if(!isRefreshing) {
           isRefreshing = true;
           try {
-            await adminAxiosInstance.post('/admin/refresh')
+            await adminAxiosInstance.post('/auth/refresh')
             isRefreshing = false;
 
             return adminAxiosInstance(originalRequest);

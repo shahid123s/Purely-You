@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 const patientAxiosInstance = axios.create({
   baseURL: 'http://localhost:3001/api/patient',
   timeout: 5000,
+  withCredentials: true,
 });
 
 export default patientAxiosInstance;
@@ -21,7 +22,7 @@ patientAxiosInstance.interceptors.response.use(
         if(!isRefreshing) {
           isRefreshing = true;
           try {
-            await patientAxiosInstance.post('/patient/refresh')
+            await patientAxiosInstance.post('/auth/refresh-token')
             isRefreshing = false;
 
             return patientAxiosInstance(originalRequest);
