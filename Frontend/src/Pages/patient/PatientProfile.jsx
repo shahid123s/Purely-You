@@ -1,5 +1,115 @@
 import { useState, useEffect } from "react";
 import { fetchPatientProfile } from "../../services/FetchDatas";
+import { FiSearch, FiX, FiUser, FiCalendar, FiClock } from "react-icons/fi";
+
+// Searchable Doctor Dropdown Component
+const DoctorDropdown = ({ 
+  doctors, 
+  selectedDoctor, 
+  onSelect, 
+  placeholder = "Select a dermatologist" 
+}) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+
+  const filteredDoctors = doctors.filter(doctor =>
+    doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="relative">
+      <div 
+        className="flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md shadow-sm cursor-pointer"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {selectedDoctor ? (
+          <div className="flex items-center">
+            {selectedDoctor.image && (
+              <img 
+                src={selectedDoctor.image} 
+                alt={selectedDoctor.name}
+                className="w-8 h-8 rounded-full mr-2 object-cover"
+              />
+            )}
+            <div>
+              <p className="text-sm font-medium">{selectedDoctor.name}</p>
+              <p className="text-xs text-gray-500">{selectedDoctor.specialty}</p>
+            </div>
+          </div>
+        ) : (
+          <span className="text-gray-400">{placeholder}</span>
+        )}
+        <svg
+          className={`h-5 w-5 text-gray-400 transition-transform ${isOpen ? "transform rotate-180" : ""}`}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </div>
+
+      {isOpen && (
+        <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-1 max-h-60 overflow-auto">
+          <div className="px-3 py-2 border-b">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiSearch className="h-4 w-4 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm"
+                placeholder="Search dermatologists..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {filteredDoctors.length > 0 ? (
+            filteredDoctors.map((doctor) => (
+              <div
+                key={doctor.id}
+                className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                onClick={() => {
+                  onSelect(doctor);
+                  setIsOpen(false);
+                }}
+              >
+                <div className="flex items-center">
+                  {doctor.image ? (
+                    <img 
+                      src={doctor.image} 
+                      alt={doctor.name}
+                      className="w-8 h-8 rounded-full mr-2 object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+                      <FiUser className="text-gray-500" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm font-medium">{doctor.name}</p>
+                    <p className="text-xs text-gray-500">{doctor.specialty}</p>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="px-3 py-2 text-sm text-gray-500">
+              No dermatologists found
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // Calendar component
 const Calendar = ({ selectedDate, onDateChange, availableDates }) => {
@@ -150,49 +260,50 @@ export default function PatientProfile() {
   const [isUploading, setIsUploading] = useState(false);
   const [notification, setNotification] = useState(null);
 
+  // Updated doctors array with skin care specialties
   const [doctors] = useState([
     {
       id: "doc-1",
-      name: "Dr. James Roberts",
-      specialty: "Cardiology",
+      name: "Dr. Sophia Chen",
+      specialty: "Medical Dermatology",
       availableDays: ["Monday", "Wednesday", "Friday"],
-      image: "/doctor1.jpg",
+      image: "/dermatologist1.jpg",
     },
     {
       id: "doc-2",
-      name: "Dr. Emily Clark",
-      specialty: "Pediatrics",
+      name: "Dr. Michael Rodriguez",
+      specialty: "Cosmetic Dermatology",
       availableDays: ["Tuesday", "Thursday", "Saturday"],
-      image: "/doctor2.jpg",
+      image: "/dermatologist2.jpg",
     },
     {
       id: "doc-3",
-      name: "Dr. David Lee",
-      specialty: "Dermatology",
+      name: "Dr. Priya Patel",
+      specialty: "Pediatric Dermatology",
       availableDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-      image: "/doctor3.jpg",
+      image: "/dermatologist3.jpg",
     },
     {
       id: "doc-4",
-      name: "Dr. Maria Garcia",
-      specialty: "Neurology",
+      name: "Dr. James Wilson",
+      specialty: "Acne Specialist",
       availableDays: ["Wednesday", "Thursday", "Friday"],
-      image: "/doctor4.jpg",
+      image: "/dermatologist4.jpg",
     },
     {
       id: "doc-5",
-      name: "Dr. Robert Chen",
-      specialty: "Orthopedics",
+      name: "Dr. Olivia Kim",
+      specialty: "Anti-Aging Specialist",
       availableDays: ["Monday", "Tuesday", "Friday"],
-      image: "/doctor5.jpg",
+      image: "/dermatologist5.jpg",
     },
   ]);
 
   const [appointments, setAppointments] = useState([
     {
       id: "apt-1",
-      doctor: "Dr. James Roberts",
-      specialty: "Cardiology",
+      doctor: "Dr. Sophia Chen",
+      specialty: "Medical Dermatology",
       date: "April 15, 2025",
       time: "10:30 AM",
       status: "upcoming",
@@ -200,17 +311,17 @@ export default function PatientProfile() {
     },
     {
       id: "apt-2",
-      doctor: "Dr. Emily Clark",
-      specialty: "Pediatrics",
+      doctor: "Dr. Michael Rodriguez",
+      specialty: "Cosmetic Dermatology",
       date: "March 22, 2025",
       time: "2:00 PM",
       status: "completed",
-      medicalRecord: "Patient is healthy, no issues detected during checkup.",
+      medicalRecord: "Patient has mild acne, prescribed topical retinoid cream.",
     },
     {
       id: "apt-3",
-      doctor: "Dr. David Lee",
-      specialty: "Dermatology",
+      doctor: "Dr. Priya Patel",
+      specialty: "Pediatric Dermatology",
       date: "May 5, 2025",
       time: "11:15 AM",
       status: "upcoming",
@@ -219,11 +330,10 @@ export default function PatientProfile() {
   ]);
 
   const [bookingForm, setBookingForm] = useState({
-    specialty: "",
-    doctor: "",
+    doctor: null,
     date: "",
     time: "",
-    problem: "",
+    concern: "",
     notes: "",
   });
 
@@ -233,7 +343,6 @@ export default function PatientProfile() {
     reason: "",
   });
 
-  const [availableDoctors, setAvailableDoctors] = useState([]);
   const [availableDates, setAvailableDates] = useState([]);
   const [availableTimes, setAvailableTimes] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -241,33 +350,9 @@ export default function PatientProfile() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [showRescheduleCalendar, setShowRescheduleCalendar] = useState(false);
 
-  // Fetch available doctors based on specialty
+  // Fetch available dates when doctor is selected
   useEffect(() => {
-    fetchPatientProfile();
-
-    if (bookingForm.specialty) {
-      const filteredDoctors = doctors.filter(
-        (doc) => doc.specialty === bookingForm.specialty
-      );
-      setAvailableDoctors(filteredDoctors);
-      setBookingForm((prev) => ({ ...prev, doctor: "", date: "", time: "" }));
-    } else {
-      setAvailableDoctors([]);
-    }
-  }, [bookingForm.specialty, doctors]);
-
-  // Fetch available dates for booking or rescheduling
-  useEffect(() => {
-    let selectedDoctor = null;
     if (bookingForm.doctor) {
-      selectedDoctor = doctors.find((doc) => doc.id === bookingForm.doctor);
-    } else if (selectedAppointment && isRescheduleModalOpen) {
-      selectedDoctor = doctors.find(
-        (doc) => doc.name === selectedAppointment.doctor
-      );
-    }
-
-    if (selectedDoctor) {
       const dates = [];
       const today = new Date();
       for (let i = 1; i <= 14; i++) {
@@ -275,7 +360,7 @@ export default function PatientProfile() {
         date.setDate(today.getDate() + i);
         const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
         if (
-          selectedDoctor.availableDays.includes(dayName) &&
+          bookingForm.doctor.availableDays.includes(dayName) &&
           dayName !== "Sunday"
         ) {
           dates.push({
@@ -290,15 +375,43 @@ export default function PatientProfile() {
         }
       }
       setAvailableDates(dates);
-      if (isRescheduleModalOpen) {
-        setRescheduleForm((prev) => ({ ...prev, date: "", time: "" }));
-      } else {
-        setBookingForm((prev) => ({ ...prev, date: "", time: "" }));
-      }
+      setBookingForm(prev => ({ ...prev, date: "", time: "" }));
     } else {
       setAvailableDates([]);
     }
-  }, [bookingForm.doctor, selectedAppointment, isRescheduleModalOpen, doctors]);
+  }, [bookingForm.doctor]);
+
+  // Fetch available dates for rescheduling
+  useEffect(() => {
+    if (selectedAppointment && isRescheduleModalOpen) {
+      const doctor = doctors.find(doc => doc.name === selectedAppointment.doctor);
+      if (doctor) {
+        const dates = [];
+        const today = new Date();
+        for (let i = 1; i <= 14; i++) {
+          const date = new Date();
+          date.setDate(today.getDate() + i);
+          const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
+          if (
+            doctor.availableDays.includes(dayName) &&
+            dayName !== "Sunday"
+          ) {
+            dates.push({
+              value: date.toISOString().split("T")[0],
+              display: date.toLocaleDateString("en-US", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              }),
+            });
+          }
+        }
+        setAvailableDates(dates);
+        setRescheduleForm(prev => ({ ...prev, date: "", time: "" }));
+      }
+    }
+  }, [selectedAppointment, isRescheduleModalOpen, doctors]);
 
   // Fetch available times when a date is selected
   useEffect(() => {
@@ -326,9 +439,9 @@ export default function PatientProfile() {
       });
       setAvailableTimes(formattedTimes);
       if (isRescheduleModalOpen) {
-        setRescheduleForm((prev) => ({ ...prev, time: "" }));
+        setRescheduleForm(prev => ({ ...prev, time: "" }));
       } else {
-        setBookingForm((prev) => ({ ...prev, time: "" }));
+        setBookingForm(prev => ({ ...prev, time: "" }));
       }
     } else {
       setAvailableTimes([]);
@@ -357,11 +470,10 @@ export default function PatientProfile() {
   const openBookingModal = () => {
     setIsBookingModalOpen(true);
     setBookingForm({
-      specialty: "",
-      doctor: "",
+      doctor: null,
       date: "",
       time: "",
-      problem: "",
+      concern: "",
       notes: "",
     });
     setShowCalendar(false);
@@ -410,11 +522,10 @@ export default function PatientProfile() {
     e.preventDefault();
     setIsSubmitting(true);
     setTimeout(() => {
-      const selectedDoctor = doctors.find((doc) => doc.id === bookingForm.doctor);
       const newAppointment = {
         id: `apt-${Date.now()}`,
-        doctor: selectedDoctor.name,
-        specialty: bookingForm.specialty,
+        doctor: bookingForm.doctor.name,
+        specialty: bookingForm.doctor.specialty,
         date: new Date(bookingForm.date).toLocaleDateString("en-US", {
           month: "long",
           day: "numeric",
@@ -516,8 +627,6 @@ export default function PatientProfile() {
     setRescheduleForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const specialties = [...new Set(doctors.map((doc) => doc.specialty))];
-
   const filteredAppointments =
     appointmentFilter === "all"
       ? appointments
@@ -613,7 +722,7 @@ export default function PatientProfile() {
                       <select
                         value={appointmentFilter}
                         onChange={(e) => setAppointmentFilter(e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                        className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
                       >
                         <option value="all">All Appointments</option>
                         <option value="upcoming">Upcoming</option>
@@ -663,41 +772,11 @@ export default function PatientProfile() {
                                 <p className="text-sm text-gray-600">{appointment.specialty}</p>
                                 <div className="flex items-center space-x-4 text-sm text-gray-600">
                                   <div className="flex items-center">
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      width="24"
-                                      height="24"
-                                      viewBox="0 0 24 24"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      strokeWidth="2"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      className="mr-1 h-4 w-4"
-                                    >
-                                      <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-                                      <line x1="16" x2="16" y1="2" y2="6" />
-                                      <line x1="8" x2="8" y1="2" y2="6" />
-                                      <line x1="3" x2="21" y1="10" y2="10" />
-                                    </svg>
+                                    <FiCalendar className="mr-1 h-4 w-4" />
                                     {appointment.date}
                                   </div>
                                   <div className="flex items-center">
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      width="24"
-                                      height="24"
-                                      viewBox="0 0 24 24"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      strokeWidth="2"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      className="mr-1 h-4 w-4"
-                                    >
-                                      <circle cx="12" cy="12" r="10" />
-                                      <polyline points="12 6 12 12 16 14" />
-                                    </svg>
+                                    <FiClock className="mr-1 h-4 w-4" />
                                     {appointment.time}
                                   </div>
                                 </div>
@@ -970,25 +1049,12 @@ export default function PatientProfile() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Book New Appointment</h2>
+              <h2 className="text-xl font-bold">Book Skin Care Consultation</h2>
               <button
                 onClick={() => setIsBookingModalOpen(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <FiX className="h-6 w-6" />
               </button>
             </div>
 
@@ -996,43 +1062,14 @@ export default function PatientProfile() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Medical Specialty Needed
+                    Dermatologist
                   </label>
-                  <select
-                    name="specialty"
-                    value={bookingForm.specialty}
-                    onChange={handleBookingChange}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
-                    required
-                  >
-                    <option value="">Select a specialty</option>
-                    {specialties.map((specialty) => (
-                      <option key={specialty} value={specialty}>
-                        {specialty}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Doctor
-                  </label>
-                  <select
-                    name="doctor"
-                    value={bookingForm.doctor}
-                    onChange={handleBookingChange}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
-                    required
-                    disabled={!bookingForm.specialty}
-                  >
-                    <option value="">Select a doctor</option>
-                    {availableDoctors.map((doctor) => (
-                      <option key={doctor.id} value={doctor.id}>
-                        {doctor.name}
-                      </option>
-                    ))}
-                  </select>
+                  <DoctorDropdown
+                    doctors={doctors}
+                    selectedDoctor={bookingForm.doctor}
+                    onSelect={(doctor) => setBookingForm({...bookingForm, doctor, date: "", time: ""})}
+                    placeholder="Select a dermatologist"
+                  />
                 </div>
 
                 <div>
@@ -1054,6 +1091,7 @@ export default function PatientProfile() {
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 cursor-pointer"
                     placeholder="Select a date"
                     required
+                    disabled={!bookingForm.doctor}
                   />
                   {showCalendar && (
                     <div className="mt-2 z-10">
@@ -1093,15 +1131,15 @@ export default function PatientProfile() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Briefly describe your problem
+                  Skin Concern
                 </label>
                 <input
                   type="text"
-                  name="problem"
-                  value={bookingForm.problem}
+                  name="concern"
+                  value={bookingForm.concern}
                   onChange={handleBookingChange}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
-                  placeholder="e.g. Chest pain, skin rash, etc."
+                  placeholder="e.g. Acne, rosacea, anti-aging, etc."
                   required
                 />
               </div>
@@ -1116,29 +1154,26 @@ export default function PatientProfile() {
                   onChange={handleBookingChange}
                   rows="3"
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
-                  placeholder="Any other information you'd like to share..."
+                  placeholder="Any other information about your skin condition..."
                 />
               </div>
 
               {bookingForm.doctor && (
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Selected Doctor</h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Selected Dermatologist</h3>
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0">
                       <img
                         className="h-16 w-16 rounded-full object-cover"
-                        src={
-                          doctors.find((d) => d.id === bookingForm.doctor)?.image ||
-                          "/doctor-placeholder.jpg"
-                        }
-                        alt="Doctor"
+                        src={bookingForm.doctor.image || "/dermatologist-placeholder.jpg"}
+                        alt="Dermatologist"
                       />
                     </div>
                     <div>
                       <h4 className="text-lg font-medium text-gray-900">
-                        {doctors.find((d) => d.id === bookingForm.doctor)?.name}
+                        {bookingForm.doctor.name}
                       </h4>
-                      <p className="text-sm text-gray-500">{bookingForm.specialty}</p>
+                      <p className="text-sm text-gray-500">{bookingForm.doctor.specialty}</p>
                     </div>
                   </div>
                 </div>
@@ -1182,7 +1217,7 @@ export default function PatientProfile() {
                       Booking...
                     </>
                   ) : (
-                    "Book Appointment"
+                    "Book Consultation"
                   )}
                 </button>
               </div>
@@ -1207,20 +1242,7 @@ export default function PatientProfile() {
                 onClick={() => setIsRescheduleModalOpen(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <FiX className="h-6 w-6" />
               </button>
             </div>
 
@@ -1352,29 +1374,16 @@ export default function PatientProfile() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Medical Record</h2>
+              <h2 className="text-xl font-bold">Treatment Summary</h2>
               <button
                 onClick={() => setIsMedicalRecordModalOpen(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <FiX className="h-6 w-6" />
               </button>
             </div>
             <div className="text-gray-700 whitespace-pre-wrap">
-              {selectedMedicalRecord || "No medical record available."}
+              {selectedMedicalRecord || "No treatment summary available."}
             </div>
             <div className="mt-6 flex justify-end">
               <button
