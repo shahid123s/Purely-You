@@ -4,11 +4,10 @@ import {
   FiHome,
   FiUsers,
   FiCalendar,
-  FiDollarSign,
-  FiSettings,
   FiLogOut,
   FiMenu,
-  FiX
+  FiX,
+  FiUserPlus
 } from 'react-icons/fi';
 
 const AdminSidebar = () => {
@@ -43,8 +42,8 @@ const AdminSidebar = () => {
     { path: '/admin', icon: FiHome, label: 'Dashboard' },
     { path: '/admin/users', icon: FiUsers, label: 'Users' },
     { path: '/admin/appointments', icon: FiCalendar, label: 'Appointments' },
-    { path: '/admin/financial', icon: FiDollarSign, label: 'Financial' },
-    { path: '/admin/settings', icon: FiSettings, label: 'Settings' },
+    { path: '/admin/doctors', icon: FiUserPlus, label: 'Doctors' },
+    { path: '/admin/pending-doctors', icon: FiUserPlus, label: 'Pending Doctors' },
   ];
 
   const isActive = (path) => {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { FiUsers, FiCalendar, FiActivity, FiDownload } from 'react-icons/fi'
+import { FiUsers, FiCalendar, FiActivity } from 'react-icons/fi'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import AdminSidebar from '../../components/admin/AdminSidebar'
 
@@ -49,22 +49,6 @@ const AdminDashboard = () => {
             completed: Math.floor(Math.random() * 80) + 15,
             cancelled: Math.floor(Math.random() * 15) + 2
           }))
-        } else {
-          dummyStats = {
-            revenue: 125600,
-            expenses: 78600,
-            profit: 47000,
-            growth: 12.5
-          }
-          
-          dummyChartData = Array.from({ length: timeRange === 'month' ? 12 : 7 }, (_, i) => ({
-            name: timeRange === 'month' ? 
-              new Date(2023, i).toLocaleString('default', { month: 'short' }) : 
-              ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][i],
-            revenue: Math.floor(Math.random() * 20000) + 5000,
-            expenses: Math.floor(Math.random() * 12000) + 3000,
-            profit: Math.floor(Math.random() * 8000) + 2000
-          }))
         }
         
         setStats(dummyStats)
@@ -77,10 +61,6 @@ const AdminDashboard = () => {
     
     fetchData()
   }, [reportType, timeRange])
-
-  const handleDownload = () => {
-    alert(`Downloading ${reportType} report for ${timeRange}`)
-  }
 
   return (
     <div className="md:ml-64 p-4 md:p-6">
@@ -96,7 +76,6 @@ const AdminDashboard = () => {
             >
               <option value="users">User Reports</option>
               <option value="appointments">Appointment Reports</option>
-              <option value="financial">Financial Reports</option>
             </select>
             <select
               className="px-4 py-2 border rounded-lg bg-white"
@@ -106,13 +85,6 @@ const AdminDashboard = () => {
               <option value="month">Monthly</option>
               <option value="week">Weekly</option>
             </select>
-            <button 
-              onClick={handleDownload}
-              className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-            >
-              <FiDownload className="mr-2" />
-              Export
-            </button>
           </div>
         </div>
 
@@ -137,9 +109,7 @@ const AdminDashboard = () => {
                       </p>
                     </div>
                     <div className="p-3 rounded-full bg-indigo-100 text-indigo-600">
-                      {reportType === 'users' ? <FiUsers /> : 
-                       reportType === 'appointments' ? <FiCalendar /> : 
-                       <FiActivity />}
+                      {reportType === 'users' ? <FiUsers /> : <FiCalendar />}
                     </div>
                   </div>
                 </div>
@@ -159,17 +129,11 @@ const AdminDashboard = () => {
                       <Bar dataKey="newUsers" fill="#8884d8" name="New Users" />
                       <Bar dataKey="activeUsers" fill="#82ca9d" name="Active Users" />
                     </>
-                  ) : reportType === 'appointments' ? (
+                  ) : (
                     <>
                       <Bar dataKey="scheduled" fill="#8884d8" name="Scheduled" />
                       <Bar dataKey="completed" fill="#82ca9d" name="Completed" />
                       <Bar dataKey="cancelled" fill="#ff8042" name="Cancelled" />
-                    </>
-                  ) : (
-                    <>
-                      <Bar dataKey="revenue" fill="#8884d8" name="Revenue ($)" />
-                      <Bar dataKey="expenses" fill="#ff8042" name="Expenses ($)" />
-                      <Bar dataKey="profit" fill="#82ca9d" name="Profit ($)" />
                     </>
                   )}
                 </BarChart>
