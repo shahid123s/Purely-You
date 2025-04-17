@@ -46,7 +46,7 @@ export const decodeAccessToken = async (accessToken) => {
         return jwt.verify(accessToken, accessSecret);
     } catch (error) {
         console.error(error)
-        throw new CustomError('Invalid or Expired Access Token', 401, ERROR_CODES.ACCESS_DENIED);
+        throw new CustomError('Invalid or Expired Access Token', 401, );
     }
 }
 
@@ -62,7 +62,7 @@ export const decodeRefreshToken = async (refreshToken) => {
         return jwt.verify(refreshToken, refreshSecret);
     } catch (error) {
         console.error(error)
-        throw new CustomError('Invalid or Expired Access Token', 401, ERROR_CODES.ACCESS_DENIED);
+        throw new CustomError('Invalid or Expired Access Token', 401, );
     }
 }
 

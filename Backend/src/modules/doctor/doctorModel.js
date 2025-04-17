@@ -19,7 +19,7 @@ const doctorSchema  = new mongoose.Schema({
         required: true,
         unique: true,
     },
-    certificate: {
+    licenseNumber: {
         type: String,
         required: true,
     },
@@ -31,7 +31,12 @@ const doctorSchema  = new mongoose.Schema({
     profileImage: {
         type: String,
         default: ''
-    }
+    },
+    status: {
+        type: String,
+        enum: ['approved', 'pending', 'rejected'],
+        default: 'pending',
+    },
 })
 
 

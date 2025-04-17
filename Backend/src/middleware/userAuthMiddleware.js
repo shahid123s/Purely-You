@@ -1,39 +1,26 @@
 import CustomError from "../utils/CustomError.js";
+import { decodeAccessToken } from "../utils/jwtUtils.js";
 
 export const autheticateUser = async (req, res, next) => {
+    const accessToken = req.cookies?.patientAccessToken;
+
+    // Check if access token is missing
+    if (!accessToken) {
+        return res.status(401).json({ success: false, message: "Login Only" });
+    }
+
     try {
-        console.log('Headers:', req.headers); // Debugging
-        const authHead = req.headers['authorization'];
+        const decodedToken = await decodeAccessToken(accessToken);
 
-        console.log(authHead)
-
-        if (!authHead || !authHead.startsWith('Bearer')) {
-            throw new CustomError('Invalid Token', 401)
-             
+        if (!decodedToken) {
+            return res.status(401).json({ success: false, message: "Unauthorized" });
         }
 
-        const token = authHead.split(' ')[1];
-        if (!token) {
-            throw new CustomError(
-               'Invalid Token', 
-               401,
-            );
-        }
-
-        const decode = await decodeAccessToken(token);
-        // console.log('Decoded Token:', decode); // Debugging
-
-        if (!decode || decode.role !== USER) {
-            throw new CustomError(
-                'Invalid Token',
-                401,
-            );
-        }
-
-        req.user = decode;
+        req.patient = decodedToken.userId; // Attach user ID to request
         next();
+
     } catch (error) {
-        console.error('Authentication Error:', error); // Debugging
-        // next(error); // Pass the error to the errorHandler
+        console.error("Authentication error:", error);
+        return res.status(401).json({ success: false, message: "Invalid or expired token." });
     }
 }

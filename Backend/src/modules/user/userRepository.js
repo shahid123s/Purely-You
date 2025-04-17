@@ -1,6 +1,7 @@
 import CustomError from '../../utils/CustomError.js';
 import User from './userModel.js';
 import { ERROR_MESSAGES } from '../../constants/ErrorMessages.js';
+import { get } from 'http';
 
 export const userRepository = {
     
@@ -28,6 +29,14 @@ export const userRepository = {
         } catch (error) {
             throw new CustomError(error.message, 500, ERROR_MESSAGES.DATABASE_ERROR);
         }
+    },
+    getUserById: async (userId) => {
+        try {
+            return await User.findById(userId, '-password -__v');
+        } catch (error) {
+            throw new CustomError(error.message, 500, ERROR_MESSAGES.DATABASE_ERROR);
+        }
+    
     }
     
 }

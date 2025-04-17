@@ -7,6 +7,7 @@ const admin = express.Router();
 // User Authentication Routes
 patient.post('/login',authController.userLogin);
 patient.post('/register', authController.userRegister);
+patient.post('/refresh-token', authController.userRefreshToken);
 
 // Doctor Authentication Routes
 doctor.post('/login',authController.doctorLogin);

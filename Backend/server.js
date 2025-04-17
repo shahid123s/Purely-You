@@ -10,7 +10,8 @@ import patientRoute from './src/modules/user/userRoute.js';
 import aiRoute from './src/modules/aiAnalys/aiRouter.js'
 import morgan from 'morgan';
 import { autheticateUser } from './src/middleware/userAuthMiddleware.js';
-import { patient } from './src/modules/auth/authRoute.js';
+import { patient, doctor, admin } from './src/modules/auth/authRoute.js';
+import adminRoute from './src/modules/admin/adminRoute.js'
 const {port} = appConfig.app
 
 
@@ -28,12 +29,15 @@ app.get('/', (req, res) => {
 }) 
 app.use('/analyse',aiRoute )
 app.use('/api/patient/auth', patient );
+app.use('/api/doctor/auth', doctor);
+app.use('/api/admin/auth', admin);
+app.use('/api/admin', adminRoute)
 app.use('/api/patient',autheticateUser, patientRoute)
 app.use(errorHandler)
 console.log('here')
 
 
-app.listen(port, async () => {
+app.listen(port, async () => { 
   try {
     await connectMongoDb();
     process.stdout.write(`Server is running on port ${port}\n`);

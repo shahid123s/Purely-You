@@ -1,3 +1,4 @@
+
 import { authServices } from "./authServices.js";
 
 
@@ -11,6 +12,8 @@ export const authController = {
         try {
 
             const {accessToken, refreshToken} = await authServices.patientAuthServices.userLogin(email, password);
+
+            console.log(accessToken, refreshToken, 'Access Token and Refresh Token in Controller')
 
             res.cookie('patientRefreshToken', refreshToken, {
                 httpOnly: true,
@@ -82,6 +85,12 @@ export const authController = {
                         message: 'Unauthorised',
                     })
             }
+            res.cookie('patientAccessToken', result, {
+                httpOnly: true,
+                secure: false,
+                sameSite: 'Lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+            });
             return res
                 .status(200)
                 .json({
@@ -110,7 +119,7 @@ export const authController = {
 
     doctorRegister: async (req, res, next) => {
         const { doctorData } = req.body;
-        console.log(doctorData);
+        console.log(doctorData, 'Doctor Register in Controller');
         try {
             let result = await authServices.doctorAuthServices.doctorRegister(doctorData);
             console.log(result)
@@ -138,7 +147,7 @@ export const authController = {
                         message: 'Please provide email and password',
                     })
             }
-            const [accessToken, refreshToken] = await authServices.doctorAuthServices.doctorLogin(email, password);
+            const {accessToken, refreshToken} = await authServices.doctorAuthServices.doctorLogin(email, password);
 
 
             res.cookie('doctorRefreshToken', refreshToken, {
@@ -224,7 +233,7 @@ export const authController = {
                         message: 'Please provide email and password',
                     })
             }
-            const [accessToken, refreshToken] = await authServices.adminAuthServices.adminLogin(email, password);
+            const {accessToken, refreshToken} = await authServices.adminAuthServices.adminLogin(email, password);
 
             res.cookie('adminRefreshToken', refreshToken, {
                 httpOnly: true,
@@ -301,9 +310,10 @@ export const authController = {
 
     // Admin Registration
     adminRegister: async (req, res, next) => {
-        const { adminData } = req.body;
+        const { email, password } = req.body;
+        console.log(req.body, 'Admin Register in Controller');
         try {
-            let result = await authServices.adminAuthServices.adminRegister(adminData);
+            let result = await authServices.adminAuthServices.adminRegister({email, password});
             if (result) {
                 res.status(200).json({
                     success: true,

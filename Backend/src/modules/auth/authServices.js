@@ -1,9 +1,9 @@
 import CustomError from "../../utils/CustomError.js";
-import { generateAccessToken, generateRefreshToken } from "../../utils/jwtUtils.js";
+import { decodeRefreshToken, generateAccessToken, generateRefreshToken } from "../../utils/jwtUtils.js";
 import { doctorRepository } from "../doctor/doctorRepository.js";
 import { userRepository } from "../user/userRepository.js"
 import { comparePassword, hashPassword } from "./utils/bcryptUtils.js";
-
+import { adminRepository } from "../admin/adminRepository.js";
 
 export const authServices = {
     patientAuthServices: {
@@ -55,6 +55,7 @@ export const authServices = {
             try {
                 const decoded = await decodeRefreshToken(refreshToken);
                 const accessToken = await generateAccessToken(decoded.userId, decoded.role);
+                
                 return accessToken;
             } catch (error) {
                 throw new CustomError(
@@ -122,18 +123,18 @@ export const authServices = {
     adminAuthServices: {
         adminLogin: async (email, password) => {
             try {
-                const admin = await adminRepository.getAdminByEmail(email);
+                const admin = await adminRepository.getAdmin(email);
 
                 if (!admin) {
                     throw new CustomError("Admin not found", 404);
                 }
 
                 let isMatch = await comparePassword(password, admin.password);
-                if (isMatch) {
+                if (!isMatch) {
                     throw new CustomError('Invalid Credentials', 406)
                 }
 
-                const [accessToken, refreshToken] = await Promise.all([
+                const {accessToken, refreshToken} = await Promise.all([
                     generateAccessToken(admin._id, admin.role),
                     generateRefreshToken(admin._id, admin.role)
                 ]);
@@ -147,11 +148,7 @@ export const authServices = {
 
         adminRegister: async (adminData) => {
             try {
-                const isExist = await adminRepository.isExistsAdmin(adminData.email);
 
-                if (isExist) {
-                    throw new CustomError('Admin Already Exists', 409);
-                }
                 adminData.password = await hashPassword(adminData.password);
 
                 let admin = await adminRepository.createAdmin(adminData);
