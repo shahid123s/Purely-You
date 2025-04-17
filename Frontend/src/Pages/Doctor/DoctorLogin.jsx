@@ -1,14 +1,19 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "../../components/header/Header";
+import { sendLoginData } from "../../services/sendData";
 
 export default function DoctorLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const handleSubmit = (e) => {
+  const navigate = useNavigate();
+  const handleSubmit =async  (e) => {
     e.preventDefault();
-    // Handle doctor login logic
+    const result = await sendLoginData({email, password})
+    console.log(result);
+    if(result.success){
+      navigate('/doctor')
+    }
     console.log({ email, password });
   };
 

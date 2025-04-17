@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { FiLock, FiMail } from 'react-icons/fi'
+import { adminLoginRequest } from '../../services/sendData'
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('')
@@ -11,9 +12,14 @@ const AdminLogin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    const result = await adminLoginRequest({email, password})
+    if(result.success){
+      localStorage.setItem('adminToken', result.token)
+      navigate('/admin/dashboard')  
+    }
     setLoading(true)
     
-    try {
+    try  {
       // Dummy authentication
       await new Promise(resolve => setTimeout(resolve, 1000))
       

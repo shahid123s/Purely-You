@@ -6,6 +6,7 @@ export const fetchPatientProfile = async ( userId ) => {
         const result = await patientAxiosInstance.get('/profile', {
             params: userId,
         })
+        return result;
         
     } catch (error) {
         return error

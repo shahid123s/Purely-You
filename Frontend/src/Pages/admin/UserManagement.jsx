@@ -7,6 +7,7 @@ import {
   FiUnlock, 
 } from 'react-icons/fi'
 import AdminSidebar from '../../components/admin/AdminSidebar'
+import adminAxiosInstance from '../../utils/adminAxiosInstance'
 
 const UserManagement = () => {
   const [users, setUsers] = useState([])
@@ -18,26 +19,9 @@ const UserManagement = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch('/api/users');
-        // const data = await response.json();
+        const response = await adminAxiosInstance.get('/users');
 
-        const firstNames = ['John', 'Sarah', 'Michael', 'Emily', 'David', 'Jessica', 'Robert', 'Jennifer']
-        const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis', 'Wilson']
-
-        const dummyUsers = Array.from({ length: 25 }, (_, i) => {
-          const firstName = firstNames[Math.floor(Math.random() * firstNames.length)]
-          const lastName = lastNames[Math.floor(Math.random() * lastNames.length)]
-
-          return {
-            id: i + 1,
-            name: `${firstName} ${lastName}`,
-            email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@example.com`,
-            phone: `(${Math.floor(100 + Math.random() * 900)}) ${Math.floor(100 + Math.random() * 900)}-${Math.floor(1000 + Math.random() * 9000)}`,
-            status: i % 7 === 0 ? 'blocked' : 'active',
-          }
-        })
-
-        setUsers(dummyUsers)
+        setUsers(response.data.data)
         setLoading(false)
       } catch (error) {
         toast.error('Failed to fetch users')
