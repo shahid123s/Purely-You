@@ -1,3 +1,7 @@
+import Image1 from '../../assets/doctor1.jpg'
+import Image2 from '../../assets/doctor2.jpg'
+import Image3 from '../../assets/doctor3.jpg'
+import Image4 from '../../assets/doctor4.jpg'
 export default function TeamSection({
     doctors = [
       {
@@ -5,28 +9,28 @@ export default function TeamSection({
         name: "Dr. James Roberts",
         title: "Certified Cardiologist",
         specialty: "Cardiology",
-        image: "/placeholder.svg?height=400&width=300",
+        image: Image1,
       },
       {
         id: "dr-emily-clark",
         name: "Dr. Emily Clark",
         title: "Experienced Pediatrician",
         specialty: "Pediatrics",
-        image: "/placeholder.svg?height=400&width=300",
+        image: Image2 ,
       },
       {
         id: "dr-michael-thompson",
         name: "Dr. Michael Thompson",
         title: "Skilled Internal Medicine",
         specialty: "Internal Medicine",
-        image: "/placeholder.svg?height=400&width=300",
+        image:Image3,
       },
       {
         id: "dr-david-lee",
         name: "Dr. David Lee",
         title: "Trusted Dermatologist",
         specialty: "Dermatology",
-        image: "/placeholder.svg?height=400&width=300",
+        image: Image4,
       },
     ],
   }) {
