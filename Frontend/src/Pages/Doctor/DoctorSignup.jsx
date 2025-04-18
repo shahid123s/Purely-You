@@ -12,6 +12,7 @@ export default function DoctorSignup() {
     licenseNumber: "",
     password: "",
     confirmPassword: "",
+    registerYear:'',
   });
 
   const handleSubmit =async (e) => {
@@ -92,6 +93,20 @@ export default function DoctorSignup() {
                   type="text"
                   required
                   value={formData.licenseNumber}
+                  onChange={handleChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="specialty" className="block text-sm font-medium text-gray-700">
+                  Register Year
+                </label>
+                <input
+                  id="registerYear"
+                  name="registerYear"
+                  type="month"
+                  required
+                  value={formData.registerYear}
                   onChange={handleChange}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />

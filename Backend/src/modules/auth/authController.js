@@ -1,4 +1,5 @@
 
+import { calculateExperience } from "../../utils/calculateExpirence.js";
 import { authServices } from "./authServices.js";
 
 
@@ -119,7 +120,7 @@ export const authController = {
 
     doctorRegister: async (req, res, next) => {
         const { doctorData } = req.body;
-        console.log(doctorData, 'Doctor Register in Controller');
+        doctorData.experince = calculateExperience(doctorData.registerYear)
         try {
             let result = await authServices.doctorAuthServices.doctorRegister(doctorData);
             console.log(result)

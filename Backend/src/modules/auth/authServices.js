@@ -69,6 +69,7 @@ export const authServices = {
     doctorAuthServices: {
         doctorRegister: async (doctorData) => {
             try {
+                console.log(doctorData, 'Doctor Register in Service');
                 let doctor = await doctorRepository.createDoctor(doctorData);
                 return doctor;
             } catch (error) {

@@ -24,7 +24,7 @@ const doctorSchema  = new mongoose.Schema({
         required: true,
     },
     experince: {
-        type: Number,
+        type: String,
         default: 0,
         required: true,
     },
@@ -37,6 +37,11 @@ const doctorSchema  = new mongoose.Schema({
         enum: ['approved', 'pending', 'rejected'],
         default: 'pending',
     },
+    isBlocked: {
+        type: Boolean,
+        default: false,
+    },
+
 })
 
 

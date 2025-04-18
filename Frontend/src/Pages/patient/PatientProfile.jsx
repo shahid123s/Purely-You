@@ -244,17 +244,19 @@ export default function PatientProfile() {
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [appointmentFilter, setAppointmentFilter] = useState("all");
   
-  const [patient, setPatient] = useState({
-    _id: "",
-    name: "",
-    email: "",
-    phone: "",
-    dob: "",
-    gender: "",
-    bloodGroup: "",
-    createdAt: "",
-    updatedAt: ""
-  });
+  // Change patient initial state to match API response
+const [patient, setPatient] = useState({
+  _id: "",
+  name: "",
+  email: "",
+  phone: "",
+  dob: "",
+  gender: "",
+  bloodGroup: "",
+  status: "",
+  createdAt: "",
+  updatedAt: ""
+});
   
   const [formData, setFormData] = useState({ ...patient });
   const [isLoading, setIsLoading] = useState(true);
@@ -317,8 +319,8 @@ export default function PatientProfile() {
     const fetchAppointments = async () => {
       try {
         setIsLoadingAppointments(true);
-        const response = await patientAxiosInstance.get('/appointments');
-        setAppointments(response.data);
+        const response = await patientAxiosInstance.get('/get-appoinments');
+        setAppointments(response.data.data);
       } catch (error) {
         toast.error('Failed to load appointments');
         console.error('Error fetching appointments:', error);
@@ -335,7 +337,7 @@ export default function PatientProfile() {
     const fetchDoctors = async () => {
       try {
         const response = await patientAxiosInstance.get('/doctors');
-        setDoctors(response.data);
+        setDoctors(response.data.data);
       } catch (error) {
         toast.error('Failed to load dermatologists');
         console.error('Error fetching doctors:', error);
