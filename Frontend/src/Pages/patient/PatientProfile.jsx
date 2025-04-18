@@ -3,6 +3,7 @@ import { FiSearch, FiX, FiUser, FiCalendar, FiClock, FiEdit, FiTrash2 } from "re
 import patientAxiosInstance from "../../utils/patientAxios";
 import { toast } from "sonner";
 import AppointmentBookingModal from "../../components/user/AppoimentBooking";
+
 const DoctorDropdown = ({ 
   doctors, 
   selectedDoctor, 
@@ -244,18 +245,18 @@ export default function PatientProfile() {
   const [appointmentFilter, setAppointmentFilter] = useState("all");
   
   const [patient, setPatient] = useState({
+    _id: "",
     name: "",
     email: "",
     phone: "",
     dob: "",
-    address: "",
-    patientId: "",
-    profileImage: null,
+    gender: "",
+    bloodGroup: "",
+    createdAt: "",
+    updatedAt: ""
   });
   
   const [formData, setFormData] = useState({ ...patient });
-  const [imagePreview, setImagePreview] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingAppointments, setIsLoadingAppointments] = useState(true);
 
@@ -279,9 +280,27 @@ export default function PatientProfile() {
       try {
         setIsLoading(true);
         const response = await patientAxiosInstance.get('/profile');
-        setPatient(response.data);
-        setFormData(response.data);
-        setImagePreview(response.data.profileImage || null);
+        const patientData = response.data.data; // Access the data property from the response
+        setPatient({
+          _id: patientData._id,
+          name: patientData.name,
+          email: patientData.email,
+          phone: patientData.phone,
+          dob: patientData.dob,
+          gender: patientData.gender,
+          bloodGroup: patientData.bloodGroup,
+          createdAt: patientData.createdAt,
+          updatedAt: patientData.updatedAt
+        });
+        setFormData({
+          _id: patientData._id,
+          name: patientData.name,
+          email: patientData.email,
+          phone: patientData.phone,
+          dob: patientData.dob,
+          gender: patientData.gender,
+          bloodGroup: patientData.bloodGroup
+        });
       } catch (error) {
         toast.error('Failed to load patient profile');
         console.error('Error fetching patient data:', error);
@@ -385,7 +404,6 @@ export default function PatientProfile() {
 
   const openEditModal = () => {
     setFormData({ ...patient });
-    setImagePreview(patient.profileImage || null);
     setIsEditModalOpen(true);
   };
 
@@ -404,48 +422,19 @@ export default function PatientProfile() {
     setShowRescheduleCalendar(false);
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (!file.type.match("image.*")) {
-        toast.error("Please select an image file");
-        return;
-      }
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error("Image must be less than 2MB");
-        return;
-      }
-      setIsUploading(true);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-        setFormData({ ...formData, profileImage: file });
-        setIsUploading(false);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('name', formData.name);
-      formDataToSend.append('email', formData.email);
-      formDataToSend.append('phone', formData.phone);
-      formDataToSend.append('dob', formData.dob);
-      formDataToSend.append('address', formData.address);
-      if (formData.profileImage instanceof File) {
-        formDataToSend.append('profileImage', formData.profileImage);
-      }
-
-      const response = await patientAxiosInstance.put('/profile', formDataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+      const response = await patientAxiosInstance.put('/profile', {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        dob: formData.dob,
+        gender: formData.gender,
+        bloodGroup: formData.bloodGroup
       });
 
-      setPatient(response.data);
+      setPatient(response.data.data);
       setIsEditModalOpen(false);
       toast.success('Profile updated successfully');
     } catch (error) {
@@ -529,16 +518,12 @@ export default function PatientProfile() {
                 <>
                   <div className="p-6 pb-2">
                     <div className="flex justify-center">
-                      <div className="relative h-24 w-24 rounded-full overflow-hidden">
-                        <img
-                          src={patient.profileImage || "/placeholder.svg"}
-                          alt="User"
-                          className="object-cover w-full h-full"
-                        />
+                      <div className="relative h-24 w-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                        <FiUser className="text-gray-500 h-12 w-12" />
                       </div>
                     </div>
                     <h2 className="text-xl font-bold text-center mt-4">{patient.name}</h2>
-                    <p className="text-sm text-gray-500 text-center">Patient ID: {patient.patientId}</p>
+                    <p className="text-sm text-gray-500 text-center">Patient ID: {patient._id}</p>
                   </div>
                   <div className="p-6">
                     <div className="space-y-4">
@@ -555,10 +540,12 @@ export default function PatientProfile() {
                         <div className="text-sm text-gray-600">{patient.dob}</div>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700">Address</label>
-                        <div className="text-sm text-gray-600 whitespace-pre-line">
-                          {patient.address}
-                        </div>
+                        <label className="text-sm font-medium text-gray-700">Gender</label>
+                        <div className="text-sm text-gray-600">{patient.gender}</div>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium text-gray-700">Blood Group</label>
+                        <div className="text-sm text-gray-600">{patient.bloodGroup}</div>
                       </div>
                     </div>
                   </div>
@@ -734,76 +721,6 @@ export default function PatientProfile() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="flex flex-col items-center">
-                <div className="relative h-32 w-32 rounded-full overflow-hidden mb-4">
-                  {isUploading ? (
-                    <div className="flex items-center justify-center h-full bg-gray-100">
-                      <svg
-                        className="animate-spin h-8 w-8 text-cyan-600"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                    </div>
-                  ) : (
-                    <img
-                      src={imagePreview || "/placeholder.svg"}
-                      alt="Profile preview"
-                      className="object-cover w-full h-full"
-                    />
-                  )}
-                  <label
-                    htmlFor="image-upload"
-                    className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center cursor-pointer opacity-0 hover:opacity-100 transition-opacity"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-8 w-8 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                  </label>
-                </div>
-                <input
-                  id="image-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-                <p className="text-sm text-gray-500 text-center">
-                  Click image to upload a new profile photo (max 2MB)
-                </p>
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Full Name
@@ -866,17 +783,45 @@ export default function PatientProfile() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Address
+                  Gender
                 </label>
-                <textarea
-                  value={formData.address}
+                <select
+                  value={formData.gender}
                   onChange={(e) =>
-                    setFormData({ ...formData, address: e.target.value })
+                    setFormData({ ...formData, gender: e.target.value })
                   }
-                  rows="3"
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
                   required
-                />
+                >
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Blood Group
+                </label>
+                <select
+                  value={formData.bloodGroup}
+                  onChange={(e) =>
+                    setFormData({ ...formData, bloodGroup: e.target.value })
+                  }
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+                  required
+                >
+                  <option value="">Select Blood Group</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
               </div>
 
               <div className="mt-6 flex justify-end space-x-3">

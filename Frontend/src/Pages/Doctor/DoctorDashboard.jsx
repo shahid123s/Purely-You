@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Header from "../../components/header/Header";
 import { Check } from 'lucide-react';
 
 export default function DoctorDashboard() {
@@ -103,7 +102,6 @@ export default function DoctorDashboard() {
 
   return (
     <main>
-      <Header />
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Dashboard header section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
