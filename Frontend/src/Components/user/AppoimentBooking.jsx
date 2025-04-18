@@ -4,7 +4,7 @@ import patientAxiosInstance from "../../utils/patientAxios";
 import { toast } from "sonner";
 
 const DoctorDropdown = ({ 
-  doctors, 
+  doctors = [], 
   selectedDoctor, 
   onSelect, 
   placeholder = "Select a dermatologist",
@@ -13,9 +13,10 @@ const DoctorDropdown = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
-  const filteredDoctors = doctors.filter(doctor =>
-    doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase())
+  const safeDoctors = Array.isArray(doctors) ? doctors : [];
+  const filteredDoctors = safeDoctors.filter(doctor =>
+    doctor?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    doctor?.specialty?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -116,9 +117,50 @@ const DoctorDropdown = ({
   );
 };
 
-const Calendar = ({ selectedDate, onDateChange, availableDates }) => {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDay, setSelectedDay] = useState(selectedDate ? new Date(selectedDate) : null);
+const Calendar = ({ selectedDate, onDateChange }) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Normalize today's date
+  
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    // Start with today's date or the selected date if it's in the future
+    const initialDate = selectedDate ? new Date(selectedDate) : today;
+    // Use the selected date if it's in the future, otherwise use today
+    return initialDate >= today ? 
+      new Date(initialDate.getFullYear(), initialDate.getMonth(), 1) :
+      new Date(today.getFullYear(), today.getMonth(), 1);
+  });
+
+  const [selectedDay, setSelectedDay] = useState(() => {
+    if (!selectedDate) return null;
+    const date = new Date(selectedDate);
+    return date >= today ? date : null;
+  });
+
+  // Define holidays (format: 'MM-DD')
+  const holidays = [
+    '01-01', // New Year's Day
+    '07-04', // Independence Day
+    '12-25', // Christmas Day
+    '12-31'  // New Year's Eve
+  ];
+
+  const isDateAvailable = (date) => {
+    // Normalize the date (remove time component)
+    const normalizedDate = new Date(date);
+    normalizedDate.setHours(0, 0, 0, 0);
+    
+    // Check if date is in the past
+    if (normalizedDate < today) return false;
+    
+    // Check if it's Sunday (day 0)
+    if (date.getDay() === 0) return false;
+    
+    // Check if it's a holiday
+    const monthDay = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    if (holidays.includes(monthDay)) return false;
+    
+    return true;
+  };
 
   const daysInMonth = (month, year) => {
     return new Date(year, month + 1, 0).getDate();
@@ -128,18 +170,13 @@ const Calendar = ({ selectedDate, onDateChange, availableDates }) => {
     return new Date(year, month, 1).getDay();
   };
 
-  const isDateAvailable = (date) => {
-    if (!availableDates || availableDates.length === 0) return false;
-    const dateStr = date.toISOString().split('T')[0];
-    return availableDates.some(d => d === dateStr);
-  };
-
   const handleDateClick = (day) => {
     const newDate = new Date(
       currentMonth.getFullYear(),
       currentMonth.getMonth(),
       day
     );
+    newDate.setHours(0, 0, 0, 0); // Normalize the time
     
     if (isDateAvailable(newDate)) {
       setSelectedDay(newDate);
@@ -148,13 +185,24 @@ const Calendar = ({ selectedDate, onDateChange, availableDates }) => {
   };
 
   const changeMonth = (increment) => {
-    setCurrentMonth(
-      new Date(
-        currentMonth.getFullYear(),
-        currentMonth.getMonth() + increment,
-        1
-      )
+    const newMonth = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth() + increment,
+      1
     );
+    
+    // Don't allow navigating to months before current month
+    const currentYear = today.getFullYear();
+    const currentMonthIndex = today.getMonth();
+    
+    if (
+      newMonth.getFullYear() < currentYear || 
+      (newMonth.getFullYear() === currentYear && newMonth.getMonth() < currentMonthIndex)
+    ) {
+      return;
+    }
+    
+    setCurrentMonth(newMonth);
   };
 
   const renderDays = () => {
@@ -166,10 +214,12 @@ const Calendar = ({ selectedDate, onDateChange, availableDates }) => {
     const days = [];
     let day = 1;
 
+    // Empty cells for days before the first day of the month
     for (let i = 0; i < firstDay; i++) {
       days.push(<div key={`empty-${i}`} className="w-10 h-10"></div>);
     }
 
+    // Days of the month
     for (; day <= daysCount; day++) {
       const currentDate = new Date(year, month, day);
       const isAvailable = isDateAvailable(currentDate);
@@ -203,7 +253,12 @@ const Calendar = ({ selectedDate, onDateChange, availableDates }) => {
       <div className="flex justify-between items-center mb-4">
         <button 
           onClick={() => changeMonth(-1)}
-          className="p-2 rounded-full hover:bg-gray-100"
+          className={`p-2 rounded-full hover:bg-gray-100 ${
+            currentMonth.getFullYear() <= today.getFullYear() && 
+            currentMonth.getMonth() <= today.getMonth() ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+          disabled={currentMonth.getFullYear() <= today.getFullYear() && 
+                   currentMonth.getMonth() <= today.getMonth()}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -240,7 +295,6 @@ export default function AppointmentBookingModal({
 }) {
   const [doctors, setDoctors] = useState([]);
   const [isLoadingDoctors, setIsLoadingDoctors] = useState(false);
-  const [isLoadingDates, setIsLoadingDates] = useState(false);
   const [isLoadingTimes, setIsLoadingTimes] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -252,19 +306,30 @@ export default function AppointmentBookingModal({
     notes: "",
   });
 
-  const [availableDates, setAvailableDates] = useState([]);
   const [availableTimes, setAvailableTimes] = useState([]);
   const [showCalendar, setShowCalendar] = useState(false);
+
+  // Standard available times (can be customized)
+  const generateAvailableTimes = () => {
+    const times = [];
+    for (let hour = 9; hour <= 17; hour++) {
+      if (hour === 12) continue; // Skip lunch hour
+      times.push(`${hour}:00`, `${hour}:30`);
+    }
+    return times;
+  };
 
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
         setIsLoadingDoctors(true);
         const response = await patientAxiosInstance.get('/doctors');
-        setDoctors(response.data);
+        const doctorsData = Array.isArray(response.data?.data) ? response.data.data : [];
+        setDoctors(doctorsData);
       } catch (error) {
         toast.error('Failed to load dermatologists');
         console.error('Error fetching doctors:', error);
+        setDoctors([]);
       } finally {
         setIsLoadingDoctors(false);
       }
@@ -272,57 +337,25 @@ export default function AppointmentBookingModal({
 
     if (isOpen) {
       fetchDoctors();
+      // Reset form when opening
+      setBookingForm({
+        doctor: null,
+        date: "",
+        time: "",
+        concern: "",
+        notes: "",
+      });
     }
   }, [isOpen]);
 
   useEffect(() => {
-    const fetchAvailableDates = async () => {
-      if (!bookingForm.doctor) {
-        setAvailableDates([]);
-        return;
-      }
-
-      try {
-        setIsLoadingDates(true);
-        const response = await patientAxiosInstance.get(
-          `/doctors/${bookingForm.doctor._id}/available-dates`
-        );
-        setAvailableDates(response.data);
-      } catch (error) {
-        toast.error('Failed to load available dates');
-        console.error('Error fetching available dates:', error);
-      } finally {
-        setIsLoadingDates(false);
-      }
-    };
-
-    fetchAvailableDates();
-  }, [bookingForm.doctor]);
-
-  useEffect(() => {
-    const fetchAvailableTimes = async () => {
-      if (!bookingForm.date || !bookingForm.doctor) {
-        setAvailableTimes([]);
-        return;
-      }
-
-      try {
-        setIsLoadingTimes(true);
-        const response = await patientAxiosInstance.get(
-          `/doctors/${bookingForm.doctor._id}/available-times`,
-          { params: { date: bookingForm.date } }
-        );
-        setAvailableTimes(response.data);
-      } catch (error) {
-        toast.error('Failed to load available times');
-        console.error('Error fetching available times:', error);
-      } finally {
-        setIsLoadingTimes(false);
-      }
-    };
-
-    fetchAvailableTimes();
-  }, [bookingForm.date, bookingForm.doctor]);
+    // Generate available times when date is selected
+    if (bookingForm.date) {
+      setAvailableTimes(generateAvailableTimes());
+    } else {
+      setAvailableTimes([]);
+    }
+  }, [bookingForm.date]);
 
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
@@ -408,11 +441,11 @@ export default function AppointmentBookingModal({
                 onClick={() => setShowCalendar(!showCalendar)}
                 readOnly
                 className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 cursor-pointer ${
-                  !bookingForm.doctor || isLoadingDates ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                  !bookingForm.doctor ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
                 }`}
-                placeholder={isLoadingDates ? "Loading available dates..." : "Select a date"}
+                placeholder="Select a date"
                 required
-                disabled={!bookingForm.doctor || isLoadingDates}
+                disabled={!bookingForm.doctor}
               />
               {showCalendar && (
                 <div className="mt-2 z-10">
@@ -422,7 +455,6 @@ export default function AppointmentBookingModal({
                       setBookingForm(prev => ({ ...prev, date, time: "" }));
                       setShowCalendar(false);
                     }}
-                    availableDates={availableDates}
                   />
                 </div>
               )}
@@ -437,12 +469,12 @@ export default function AppointmentBookingModal({
                 value={bookingForm.time}
                 onChange={handleInputChange}
                 className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 ${
-                  !bookingForm.date || isLoadingTimes ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                  !bookingForm.date ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
                 }`}
                 required
-                disabled={!bookingForm.date || isLoadingTimes}
+                disabled={!bookingForm.date}
               >
-                <option value="">{isLoadingTimes ? "Loading available times..." : "Select a time"}</option>
+                <option value="">Select a time</option>
                 {availableTimes.map((time) => (
                   <option key={time} value={time}>
                     {time}

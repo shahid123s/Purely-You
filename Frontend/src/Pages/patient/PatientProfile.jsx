@@ -337,13 +337,16 @@ const [patient, setPatient] = useState({
     const fetchDoctors = async () => {
       try {
         const response = await patientAxiosInstance.get('/doctors');
-        setDoctors(response.data.data);
+        // Ensure we're getting an array and set it
+        const doctorsData = Array.isArray(response.data?.data) ? response.data.data : [];
+        setDoctors(doctorsData);
       } catch (error) {
         toast.error('Failed to load dermatologists');
         console.error('Error fetching doctors:', error);
+        setDoctors([]); // Reset to empty array on error
       }
     };
-
+  
     fetchDoctors();
   }, []);
 
