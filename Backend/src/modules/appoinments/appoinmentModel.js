@@ -33,8 +33,8 @@ const doctorAppointmentSchema = new Schema({
   roomId: String,
   status: {
     type: String,
-    enum: ['scheduled', 'completed', 'cancelled', 'rescheduled'],
-    default: 'scheduled'
+    enum: ['scheduled', 'completed', 'cancelled', 'pending'],
+    default: 'pending'
   },
   notes: String,
   createdAt: {

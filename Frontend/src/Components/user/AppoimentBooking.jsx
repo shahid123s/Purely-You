@@ -258,7 +258,7 @@ export default function AppointmentBookingModal({
       });
 
       toast.success('Appointment booked successfully!');
-      onBookingSuccess(response.data);
+      onBookingSuccess(response.data.data);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to book appointment');
       console.error('Error booking appointment:', error);
