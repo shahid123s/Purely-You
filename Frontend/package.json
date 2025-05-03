@@ -12,6 +12,7 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.6.1",
     "@tailwindcss/vite": "^4.0.17",
+    "@zegocloud/zego-uikit-prebuilt": "^2.14.3-beta",
     "axios": "^1.8.4",
     "install": "^0.13.0",
     "lucide-react": "^0.484.0",
@@ -27,7 +28,8 @@
     "react-router-dom": "^7.4.0",
     "recharts": "^2.15.2",
     "sonner": "^2.0.3",
-    "tailwind": "^4.0.0"
+    "tailwind": "^4.0.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

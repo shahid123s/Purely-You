@@ -1,28 +1,30 @@
+import { useEffect } from 'react'
 import Image1 from '../../assets/doctor1.jpg'
 import Image2 from '../../assets/doctor2.jpg'
 import Image3 from '../../assets/doctor3.jpg'
 import Image4 from '../../assets/doctor4.jpg'
+import { fetchDoctors } from '../../services/FetchDatas'
 export default function TeamSection({
     doctors = [
       {
         id: "dr-james-roberts",
         name: "Dr. James Roberts",
-        title: "Certified Cardiologist",
-        specialty: "Cardiology",
+        title: "Certified Dermatologist",
+        specialty: "Dermatologist",
         image: Image1,
       },
       {
         id: "dr-emily-clark",
         name: "Dr. Emily Clark",
-        title: "Experienced Pediatrician",
-        specialty: "Pediatrics",
+        title: "Experienced Skincare",
+        specialty: "Dermatologist",
         image: Image2 ,
       },
       {
         id: "dr-michael-thompson",
         name: "Dr. Michael Thompson",
         title: "Skilled Internal Medicine",
-        specialty: "Internal Medicine",
+        specialty: "Dermatologist",
         image:Image3,
       },
       {
@@ -34,6 +36,13 @@ export default function TeamSection({
       },
     ],
   }) {
+
+
+    useEffect(() => {
+      fetchDoctors()
+    })
+
+
     return (
       <section className="w-full py-12 bg-white">
         <div className="container px-4 md:px-6 mx-auto max-w-7xl">
@@ -61,6 +70,7 @@ export default function TeamSection({
                 <div
                   key={doctor.id}
                   className="group relative overflow-hidden rounded-lg bg-white shadow-md transition-all hover:shadow-lg"
+
                 >
                   <div className="aspect-[3/4] w-full relative">
                     <img

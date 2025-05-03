@@ -1,8 +1,15 @@
 import doctorAxiosInstance from "../utils/doctorAxiosInstance"
 import adminAxiosInstance from "../utils/adminAxiosInstance"
+import { v4 as uuidv4 } from 'uuid';
+
+
 export const sendLoginData = async (data ={}) => {
     try {
-        const response = await doctorAxiosInstance.post('/auth/login', data)
+        const response = await doctorAxiosInstance.post('/auth/login', data);
+        localStorage.setItem('doctorDetails', response.data.doctor);
+        localStorage.setItem('roomID', uuidv4());
+
+
         return response.data;
     } catch (error) {
         return error

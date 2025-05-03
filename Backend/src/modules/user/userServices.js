@@ -13,7 +13,7 @@ export const userServices = {
             throw new CustomError("Error in getting user details" + error.message, 500);
         }
     },
-    getAllDoctors: async () => {
+     getAllDoctors: async () => {
         try {
             const doctors = await userRepository.getAllApprovedDoctors();
             return doctors;

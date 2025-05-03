@@ -122,17 +122,21 @@ const Calendar = ({ selectedDate, onDateChange }) => {
   today.setHours(0, 0, 0, 0); // Normalize today's date
   
   const [currentMonth, setCurrentMonth] = useState(() => {
-    // Start with today's date or the selected date if it's in the future
-    const initialDate = selectedDate ? new Date(selectedDate) : today;
-    // Use the selected date if it's in the future, otherwise use today
-    return initialDate >= today ? 
-      new Date(initialDate.getFullYear(), initialDate.getMonth(), 1) :
-      new Date(today.getFullYear(), today.getMonth(), 1);
+    if (selectedDate) {
+      const [year, month, day] = selectedDate.split('-').map(Number);
+      const initialDate = new Date(year, month - 1, day);
+      return initialDate >= today ? 
+        new Date(year, month - 1, 1) :
+        new Date(today.getFullYear(), today.getMonth(), 1);
+    }
+    return new Date(today.getFullYear(), today.getMonth(), 1);
   });
 
   const [selectedDay, setSelectedDay] = useState(() => {
     if (!selectedDate) return null;
-    const date = new Date(selectedDate);
+    const [year, month, day] = selectedDate.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    date.setHours(0, 0, 0, 0);
     return date >= today ? date : null;
   });
 
@@ -145,17 +149,12 @@ const Calendar = ({ selectedDate, onDateChange }) => {
   ];
 
   const isDateAvailable = (date) => {
-    // Normalize the date (remove time component)
     const normalizedDate = new Date(date);
     normalizedDate.setHours(0, 0, 0, 0);
     
-    // Check if date is in the past
     if (normalizedDate < today) return false;
-    
-    // Check if it's Sunday (day 0)
     if (date.getDay() === 0) return false;
     
-    // Check if it's a holiday
     const monthDay = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     if (holidays.includes(monthDay)) return false;
     
@@ -176,11 +175,14 @@ const Calendar = ({ selectedDate, onDateChange }) => {
       currentMonth.getMonth(),
       day
     );
-    newDate.setHours(0, 0, 0, 0); // Normalize the time
+    newDate.setHours(0, 0, 0, 0);
     
     if (isDateAvailable(newDate)) {
       setSelectedDay(newDate);
-      onDateChange(newDate.toISOString().split('T')[0]);
+      const year = newDate.getFullYear();
+      const month = String(newDate.getMonth() + 1).padStart(2, '0');
+      const day = String(newDate.getDate()).padStart(2, '0');
+      onDateChange(`${year}-${month}-${day}`);
     }
   };
 
@@ -191,7 +193,6 @@ const Calendar = ({ selectedDate, onDateChange }) => {
       1
     );
     
-    // Don't allow navigating to months before current month
     const currentYear = today.getFullYear();
     const currentMonthIndex = today.getMonth();
     
@@ -214,12 +215,10 @@ const Calendar = ({ selectedDate, onDateChange }) => {
     const days = [];
     let day = 1;
 
-    // Empty cells for days before the first day of the month
     for (let i = 0; i < firstDay; i++) {
       days.push(<div key={`empty-${i}`} className="w-10 h-10"></div>);
     }
 
-    // Days of the month
     for (; day <= daysCount; day++) {
       const currentDate = new Date(year, month, day);
       const isAvailable = isDateAvailable(currentDate);
@@ -309,11 +308,10 @@ export default function AppointmentBookingModal({
   const [availableTimes, setAvailableTimes] = useState([]);
   const [showCalendar, setShowCalendar] = useState(false);
 
-  // Standard available times (can be customized)
   const generateAvailableTimes = () => {
     const times = [];
     for (let hour = 9; hour <= 17; hour++) {
-      if (hour === 12) continue; // Skip lunch hour
+      if (hour === 12) continue;
       times.push(`${hour}:00`, `${hour}:30`);
     }
     return times;
@@ -337,7 +335,6 @@ export default function AppointmentBookingModal({
 
     if (isOpen) {
       fetchDoctors();
-      // Reset form when opening
       setBookingForm({
         doctor: null,
         date: "",
@@ -349,7 +346,6 @@ export default function AppointmentBookingModal({
   }, [isOpen]);
 
   useEffect(() => {
-    // Generate available times when date is selected
     if (bookingForm.date) {
       setAvailableTimes(generateAvailableTimes());
     } else {
@@ -432,7 +428,9 @@ export default function AppointmentBookingModal({
                 type="text"
                 name="date"
                 value={bookingForm.date ? 
-                  new Date(bookingForm.date).toLocaleDateString('en-US', { 
+                  new Date(
+                    ...bookingForm.date.split('-').map((v, i) => i === 1 ? v - 1 : v)
+                  ).toLocaleDateString('en-US', { 
                     weekday: 'short', 
                     month: 'short', 
                     day: 'numeric', 

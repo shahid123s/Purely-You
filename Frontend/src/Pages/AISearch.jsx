@@ -28,7 +28,7 @@ export default function AISearch() {
         <div className="container mx-auto px-4 py-12">
           <header className="text-center mb-12">
             <div className="inline-block px-3 py-1 bg-sky-100 text-teal-600 rounded-full text-sm font-medium mb-4">
-              Healthcare Made Simple
+            Skincare Tailored For Your Unique Need
             </div>
             <h1 className="text-5xl font-bold mb-4">
               <span className="text-gray-900">Healthcare</span> <span className="text-teal-600">Search</span>

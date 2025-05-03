@@ -84,7 +84,7 @@ export const authServices = {
                 if (!doctor) {
                     throw new CustomError("Doctor not found", 404);
                 }
-
+                
                 let isMatch = await comparePassword(password, doctor.password);
                 if (isMatch) {
                     throw new CustomError('Invalid Crendentails', 406)
@@ -95,7 +95,7 @@ export const authServices = {
                     generateRefreshToken(doctor._id, doctor.role)
                 ]);
 
-                return { accessToken, refreshToken };
+            return { accessToken, refreshToken, doctor:  { ...doctor, password: undefined} };
 
 
             } catch (error) {

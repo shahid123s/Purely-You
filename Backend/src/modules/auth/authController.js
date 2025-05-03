@@ -148,7 +148,7 @@ export const authController = {
                         message: 'Please provide email and password',
                     })
             }
-            const {accessToken, refreshToken} = await authServices.doctorAuthServices.doctorLogin(email, password);
+            const {accessToken, refreshToken, doctor} = await authServices.doctorAuthServices.doctorLogin(email, password);
 
 
             res.cookie('doctorRefreshToken', refreshToken, {
@@ -168,7 +168,8 @@ export const authController = {
                 .status(200)
                 .json({
                     success: true,
-                    message: "Doctor Login Successfully"
+                    message: "Doctor Login Successfully", 
+                    doctor
                 })
 
         } catch (error) {

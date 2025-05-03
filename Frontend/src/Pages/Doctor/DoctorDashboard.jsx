@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Check } from 'lucide-react';
+import image from '../../assets/doctor1.jpg';
 
 export default function DoctorDashboard() {
   const [activeTab, setActiveTab] = useState("today");
@@ -112,14 +113,14 @@ export default function DoctorDashboard() {
           <div className="flex items-center space-x-2">
             <div className="relative h-10 w-10 rounded-full overflow-hidden">
               <img
-                src="/placeholder.svg"
+                src ={image}
                 alt="Dr. James Roberts"
                 className="object-cover w-full h-full"
               />
             </div>
             <div>
               <p className="font-medium">Dr. James Roberts</p>
-              <p className="text-sm text-gray-600">Cardiologist</p>
+              <p className="text-sm text-gray-600">Dermatologist</p>
             </div>
           </div>
         </div>

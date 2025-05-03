@@ -16,8 +16,8 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <div className="space-y-6">
               <div className="inline-flex items-center rounded-full bg-cyan-100 px-4 py-1.5 text-sm font-medium text-cyan-800">
-                <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-cyan-500"></span>
-                Healthcare Made Simple
+                <span className="mr-1.5 h-1.5 w-1.5 rounded-full capitalize  bg-cyan-500"></span>
+                Skincare Tailored For Your Unique Need
               </div>
               <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
                 Your Health, <span className="text-cyan-600">Our Priority</span>

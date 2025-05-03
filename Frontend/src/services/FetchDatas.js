@@ -1,4 +1,6 @@
 import patientAxiosInstance from '../utils/patientAxios.js';
+import doctorAxiosInstance from  '../utils/doctorAxiosInstance.js'
+
 
 export const fetchPatientProfile = async ( userId ) => {  
     try {   
@@ -12,3 +14,14 @@ export const fetchPatientProfile = async ( userId ) => {
         return error
     }
 }  
+
+
+export const fetchDoctors = async () => {
+    try {
+        const result = await patientAxiosInstance.get('/doctors')
+        return result;
+    } catch (error) {
+        return error
+    }
+
+}

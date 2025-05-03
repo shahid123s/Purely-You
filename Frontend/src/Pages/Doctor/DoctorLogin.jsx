@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Header from "../../components/header/Header";
 import { sendLoginData } from "../../services/sendData";
 
+
 export default function DoctorLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -12,6 +13,7 @@ export default function DoctorLogin() {
     const result = await sendLoginData({email, password})
     console.log(result);
     if(result.success){
+
       navigate('/doctor')
     }
     console.log({ email, password });

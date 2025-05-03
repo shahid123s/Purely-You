@@ -19,7 +19,7 @@ const PendingDoctorsPage = () => {
         // const data = await response.json();
         
         // Dummy data if API fails
-        const specialties = ['Cardiology', 'Pediatrics', 'Dermatology', 'Neurology', 'Orthopedics']
+        const specialties = ['Dermatology', 'Dermatology', 'Dermatology', 'Dermatology', 'Dermatology']
         const dummyDoctors = Array.from({ length: 5 }, (_, i) => ({
           id: i + 1,
           name: `Dr. ${['Smith', 'Johnson', 'Williams', 'Brown', 'Jones'][i]}`,
