@@ -39,7 +39,9 @@ export const appointmentRepository = {
         }
     }  ,
     update: async (id, appoinment) => {
-        const updatedAppoinment = await DoctorAppointment.findByIdAndUpdate(id, appoinment)
+        console.log(appoinment, 'in repo')
+        const updatedAppoinment = await DoctorAppointment.findByIdAndUpdate(id, appoinment);
+        return updatedAppoinment;
     },
 
     getAppointments: async (userId) => {
@@ -52,6 +54,14 @@ export const appointmentRepository = {
     ,getAppointmentsByDoctorId: async (doctorId) => {
         try {
             return await DoctorAppointment.find({doctorId: doctorId})
+        } catch (error) {
+            throw new CustomError(error.message, 500)
+        }
+    }
+    , updateAppointmentUIState: async (id, data) => {
+        try {
+            const updatedAppointment = await DoctorAppointment.findByIdAndUpdate(id, data);
+            return updatedAppointment;
         } catch (error) {
             throw new CustomError(error.message, 500)
         }

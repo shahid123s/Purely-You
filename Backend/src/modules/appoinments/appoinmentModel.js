@@ -36,6 +36,14 @@ const doctorAppointmentSchema = new Schema({
     enum: ['scheduled', 'completed', 'cancelled', 'pending'],
     default: 'pending'
   },
+  uiState: {
+    buttonState: {
+      type: String,
+      enum: ["giveLink", "attended", "submitRecord"],
+      default: "giveLink",
+    },
+
+  },
   notes: String,
   createdAt: {
     type: Date,

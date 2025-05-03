@@ -12,6 +12,14 @@ export const doctorService = {
             const response = await appointmentRepository.getAppointmentsByDoctorId(doctorId);
         
             return response;
-        }
-
+    },
+    actionAppoinment: async (id, status) => {
+        const response = await appointmentRepository.update(id, {status});
+        return response;
+    },
+    updateUIState: async(id, uiState) => {
+        const response = await appointmentRepository.updateAppointmentUIState(id, {uiState});
+        return response;
+    
+    }
 }

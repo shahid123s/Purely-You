@@ -40,5 +40,51 @@ export const doctorController = {
         } catch (error) {
             next(error)
         }
+    },
+    actionAppoinment: async (req,res, next) => {
+        try {
+            const {appointmentId, action} = req.body;
+            console.log(req.body, 'req.body in doctorController');
+            console.log(appointmentId, action, 'appoinmentId, action in doctorController');
+            const result = await doctorService.actionAppoinment(appointmentId, action);
+            console.log(result, 'result in doctorController');  
+            if(!result) {
+                return res.status(404).json({
+                    success: false,
+                    message: "No Appoinments Found",
+                })
+            }
+            return res.status(200).json({
+                success: true,
+                message: "Appoinments Found",
+                data: result
+            })
+        } catch (error) {
+            next(error)
+        }
+    
+    },
+    updateUIState: async(req, res, next) => {
+        try {
+            const {appointmentId, action} = req.body;
+            console.log(req.body, 'req.body in doctorController');
+            console.log(appointmentId, action, 'appoinmentId, action in doctorController');
+            const result = await doctorService.updateUIState(appointmentId, action);
+            console.log(result, 'result in doctorController');
+            if(!result) {
+                return res.status(404).json({
+                    success: false,
+                    message: "No Appoinments Found",
+                })
+            }
+            return res.status(200).json({
+                success: true,
+                message: "Appoinments Found",
+                data: result
+            })
+        } catch (error) {
+            next(error)
+        }
+
     }
 }
