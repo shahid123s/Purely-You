@@ -93,6 +93,7 @@ export default function DoctorDashboard() {
 
   const markAsAttended = async (appointmentId) => {
     try {
+
       const response = await doctorAxiosInstance.put(`/appointments/ui-state`, {
         buttonState: "submitRecord",
         attended: true,
@@ -110,6 +111,7 @@ export default function DoctorDashboard() {
               : apt
           )
         );
+        navigate('/doctor/call')
       } else {
         toast.error("Failed to update appointment status");
       }

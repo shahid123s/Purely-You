@@ -66,10 +66,10 @@ export const doctorController = {
     },
     updateUIState: async(req, res, next) => {
         try {
-            const {appointmentId, action} = req.body;
+            const {appointmentId, buttonState, attended} = req.body;
             console.log(req.body, 'req.body in doctorController');
-            console.log(appointmentId, action, 'appoinmentId, action in doctorController');
-            const result = await doctorService.updateUIState(appointmentId, action);
+            console.log(appointmentId, buttonState, 'appoinmentId, buttonState in doctorController');
+            const result = await doctorService.updateUIState(appointmentId, {buttonState, attended});
             console.log(result, 'result in doctorController');
             if(!result) {
                 return res.status(404).json({

@@ -28,7 +28,7 @@ export const appointmentRepository = {
                 },
                 { new: true }
             );
-            
+
             if (!updatedAppointment) {
                 throw new CustomError('Appointment not found', 404);
             }
@@ -37,7 +37,7 @@ export const appointmentRepository = {
         } catch (error) {
             throw new CustomError(error.message, 500);
         }
-    }  ,
+    },
     update: async (id, appoinment) => {
         console.log(appoinment, 'in repo')
         const updatedAppoinment = await DoctorAppointment.findByIdAndUpdate(id, appoinment);
@@ -46,21 +46,32 @@ export const appointmentRepository = {
 
     getAppointments: async (userId) => {
         try {
-            return await DoctorAppointment.find({patientId: userId})
+            return await DoctorAppointment.find({ patientId: userId })
         } catch (error) {
             throw new CustomError(error.message, 500)
         }
     }
-    ,getAppointmentsByDoctorId: async (doctorId) => {
+    , getAppointmentsByDoctorId: async (doctorId) => {
         try {
-            return await DoctorAppointment.find({doctorId: doctorId})
+            return await DoctorAppointment.find({ doctorId: doctorId })
         } catch (error) {
             throw new CustomError(error.message, 500)
         }
-    }
-    , updateAppointmentUIState: async (id, data) => {
+    },
+    updateAppointmentUIState: async (id, data) => {
         try {
-            const updatedAppointment = await DoctorAppointment.findByIdAndUpdate(id, data);
+            const updatedAppointment = await DoctorAppointment.findByIdAndUpdate(
+                id,
+                {
+                    $set: {
+                        "uiState.buttonState": data.buttonState,
+                        "uiState.attended": data.attended
+                    }
+                },
+                { new: true }
+            );
+
+            console.log(updatedAppointment, 'updatedAppointment in repo')
             return updatedAppointment;
         } catch (error) {
             throw new CustomError(error.message, 500)

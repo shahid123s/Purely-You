@@ -18,7 +18,8 @@ export const doctorService = {
         return response;
     },
     updateUIState: async(id, uiState) => {
-        const response = await appointmentRepository.updateAppointmentUIState(id, {uiState});
+        console.log(id, uiState, 'in service')
+        const response = await appointmentRepository.updateAppointmentUIState(id, uiState);
         return response;
     
     }
