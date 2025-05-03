@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check } from 'lucide-react';
 import image from '../../assets/doctor1.jpg';
 import { useNavigate } from "react-router-dom";
+import doctorAxiosInstance from "../../utils/doctorAxiosInstance";
 
 export default function DoctorDashboard() {
   const [activeTab, setActiveTab] = useState("today");
@@ -10,62 +11,27 @@ export default function DoctorDashboard() {
   const [medicalRecord, setMedicalRecord] = useState("");
   const navigate = useNavigate()
   const [appointments, setAppointments] = useState([
-    {
-      id: "apt-001",
-      patientName: "Sarah Johnson",
-      patientId: "P-20250326",
-      patientImage: "/placeholder.svg",
-      date: "March 26, 2025",
-      time: "9:00 AM",
-      reason: "Annual checkup",
-      status: "scheduled",
-      medicalRecord: "",
-    },
-    {
-      id: "apt-002",
-      patientName: "Robert Williams",
-      patientId: "P-20250327",
-      patientImage: "/placeholder.svg",
-      date: "March 26, 2025",
-      time: "10:30 AM",
-      reason: "Follow-up consultation",
-      status: "scheduled",
-      medicalRecord: "",
-    },
-    {
-      id: "apt-003",
-      patientName: "Emma Davis",
-      patientId: "P-20250328",
-      patientImage: "/placeholder.svg",
-      date: "March 26, 2025",
-      time: "1:00 PM",
-      reason: "Skin condition assessment",
-      status: "scheduled",
-      medicalRecord: "",
-    },
-    {
-      id: "apt-004",
-      patientName: "Michael Brown",
-      patientId: "P-20250329",
-      patientImage: "/placeholder.svg",
-      date: "March 25, 2025",
-      time: "11:15 AM",
-      reason: "Chest pain evaluation",
-      status: "completed",
-      medicalRecord: "Patient reports reduced chest pain. ECG normal.",
-    },
-    {
-      id: "apt-005",
-      patientName: "Jennifer Wilson",
-      patientId: "P-20250330",
-      patientImage: "/placeholder.svg",
-      date: "March 25, 2025",
-      time: "2:45 PM",
-      reason: "Medication review",
-      status: "no-show",
-      medicalRecord: "",
-    },
-  ]);
+]);
+
+useEffect(() => {
+  const fetchAppointments = async () => {
+    try {
+      const response = await doctorAxiosInstance.get('/appointments')
+      if (!response.ok) {
+        throw new Error('Failed to fetch appointments');
+      }
+      const data = await response.json();
+      setAppointments(data);
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+    }
+  };
+
+  fetchAppointments();
+
+})
+
+
 
   const completeAppointment = (id) => {
     navigate('/doctor/call');

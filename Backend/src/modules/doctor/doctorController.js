@@ -20,5 +20,24 @@ export const doctorController = {
             next(error)
         }
    
+    },
+    getAppoinments: async (req, res, next) => {
+        try {
+            const doctorId = req.doctor;
+            const result = await doctorService.getAppoinments(doctorId);
+            if(!result) {
+                return res.status(404).json({
+                    success: false,
+                    message: "No Appoinments Found",
+                })
+            }
+            return res.status(200).json({
+                success: true,
+                message: "Appoinments Found",
+                data: result
+            })
+        } catch (error) {
+            next(error)
+        }
     }
 }
