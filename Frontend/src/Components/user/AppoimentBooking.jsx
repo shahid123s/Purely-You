@@ -117,173 +117,51 @@ const DoctorDropdown = ({
   );
 };
 
-const Calendar = ({ selectedDate, onDateChange }) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Normalize today's date
-  
-  const [currentMonth, setCurrentMonth] = useState(() => {
-    if (selectedDate) {
-      const [year, month, day] = selectedDate.split('-').map(Number);
-      const initialDate = new Date(year, month - 1, day);
-      return initialDate >= today ? 
-        new Date(year, month - 1, 1) :
-        new Date(today.getFullYear(), today.getMonth(), 1);
-    }
-    return new Date(today.getFullYear(), today.getMonth(), 1);
-  });
-
-  const [selectedDay, setSelectedDay] = useState(() => {
-    if (!selectedDate) return null;
-    const [year, month, day] = selectedDate.split('-').map(Number);
-    const date = new Date(year, month - 1, day);
-    date.setHours(0, 0, 0, 0);
-    return date >= today ? date : null;
-  });
-
-  // Define holidays (format: 'MM-DD')
-  const holidays = [
-    '01-01', // New Year's Day
-    '07-04', // Independence Day
-    '12-25', // Christmas Day
-    '12-31'  // New Year's Eve
-  ];
-
-  const isDateAvailable = (date) => {
-    const normalizedDate = new Date(date);
-    normalizedDate.setHours(0, 0, 0, 0);
+const DateDropdown = ({ selectedDate, onDateChange }) => {
+  const getNext7Weekdays = () => {
+    const dates = [];
+    let currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0); // Normalize today's date
     
-    if (normalizedDate < today) return false;
-    if (date.getDay() === 0) return false;
-    
-    const monthDay = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    if (holidays.includes(monthDay)) return false;
-    
-    return true;
-  };
-
-  const daysInMonth = (month, year) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
-
-  const firstDayOfMonth = (month, year) => {
-    return new Date(year, month, 1).getDay();
-  };
-
-  const handleDateClick = (day) => {
-    const newDate = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth(),
-      day
-    );
-    newDate.setHours(0, 0, 0, 0);
-    
-    if (isDateAvailable(newDate)) {
-      setSelectedDay(newDate);
-      const year = newDate.getFullYear();
-      const month = String(newDate.getMonth() + 1).padStart(2, '0');
-      const day = String(newDate.getDate()).padStart(2, '0');
-      onDateChange(`${year}-${month}-${day}`);
-    }
-  };
-
-  const changeMonth = (increment) => {
-    const newMonth = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth() + increment,
-      1
-    );
-    
-    const currentYear = today.getFullYear();
-    const currentMonthIndex = today.getMonth();
-    
-    if (
-      newMonth.getFullYear() < currentYear || 
-      (newMonth.getFullYear() === currentYear && newMonth.getMonth() < currentMonthIndex)
-    ) {
-      return;
+    while (dates.length < 7) {
+      // Skip Sundays (where getDay() returns 0)
+      if (currentDate.getDay() !== 0) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        dates.push(dateStr);
+      }
+      currentDate = new Date(currentDate);
+      currentDate.setDate(currentDate.getDate() + 1); // Move to next day
     }
     
-    setCurrentMonth(newMonth);
+    return dates;
   };
 
-  const renderDays = () => {
-    const month = currentMonth.getMonth();
-    const year = currentMonth.getFullYear();
-    const daysCount = daysInMonth(month, year);
-    const firstDay = firstDayOfMonth(month, year);
-    
-    const days = [];
-    let day = 1;
+  const availableDates = getNext7Weekdays();
 
-    for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="w-10 h-10"></div>);
-    }
-
-    for (; day <= daysCount; day++) {
-      const currentDate = new Date(year, month, day);
-      const isAvailable = isDateAvailable(currentDate);
-      const isSelected = selectedDay && 
-        selectedDay.getDate() === day && 
-        selectedDay.getMonth() === month && 
-        selectedDay.getFullYear() === year;
-
-      days.push(
-        <button
-          key={`day-${day}`}
-          className={`w-10 h-10 rounded-full flex items-center justify-center text-sm
-            ${isSelected ? 'bg-cyan-600 text-white' : ''}
-            ${isAvailable ? 
-              (isSelected ? 'bg-cyan-600 text-white' : 'hover:bg-gray-100 cursor-pointer') : 
-              'text-gray-400 cursor-not-allowed'}
-          `}
-          onClick={() => isAvailable && handleDateClick(day)}
-          disabled={!isAvailable}
-        >
-          {day}
-        </button>
-      );
-    }
-
-    return days;
+  const formatDateDisplay = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <div className="flex justify-between items-center mb-4">
-        <button 
-          onClick={() => changeMonth(-1)}
-          className={`p-2 rounded-full hover:bg-gray-100 ${
-            currentMonth.getFullYear() <= today.getFullYear() && 
-            currentMonth.getMonth() <= today.getMonth() ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
-          disabled={currentMonth.getFullYear() <= today.getFullYear() && 
-                   currentMonth.getMonth() <= today.getMonth()}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-          </svg>
-        </button>
-        <h3 className="font-medium">
-          {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-        </h3>
-        <button 
-          onClick={() => changeMonth(1)}
-          className="p-2 rounded-full hover:bg-gray-100"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-          </svg>
-        </button>
-      </div>
-      <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-500 mb-2">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day}>{day}</div>
-        ))}
-      </div>
-      <div className="grid grid-cols-7 gap-1">
-        {renderDays()}
-      </div>
-    </div>
+    <select
+      value={selectedDate}
+      onChange={(e) => onDateChange(e.target.value)}
+      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+      required
+    >
+      <option value="">Select a date</option>
+      {availableDates.map((date) => (
+        <option key={date} value={date}>
+          {formatDateDisplay(date)}
+        </option>
+      ))}
+    </select>
   );
 };
 
@@ -294,7 +172,6 @@ export default function AppointmentBookingModal({
 }) {
   const [doctors, setDoctors] = useState([]);
   const [isLoadingDoctors, setIsLoadingDoctors] = useState(false);
-  const [isLoadingTimes, setIsLoadingTimes] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [bookingForm, setBookingForm] = useState({
@@ -306,12 +183,12 @@ export default function AppointmentBookingModal({
   });
 
   const [availableTimes, setAvailableTimes] = useState([]);
-  const [showCalendar, setShowCalendar] = useState(false);
 
+  // Generate standard working hours (9am-5pm, excluding 12pm)
   const generateAvailableTimes = () => {
     const times = [];
     for (let hour = 9; hour <= 17; hour++) {
-      if (hour === 12) continue;
+      if (hour === 12) continue; // Skip lunch hour
       times.push(`${hour}:00`, `${hour}:30`);
     }
     return times;
@@ -335,6 +212,7 @@ export default function AppointmentBookingModal({
 
     if (isOpen) {
       fetchDoctors();
+      // Reset form when modal opens
       setBookingForm({
         doctor: null,
         date: "",
@@ -342,12 +220,15 @@ export default function AppointmentBookingModal({
         concern: "",
         notes: "",
       });
+      setAvailableTimes([]);
     }
   }, [isOpen]);
 
   useEffect(() => {
+    // Generate available times when date is selected
     if (bookingForm.date) {
       setAvailableTimes(generateAvailableTimes());
+      setBookingForm(prev => ({ ...prev, time: "" })); // Reset time when date changes
     } else {
       setAvailableTimes([]);
     }
@@ -355,6 +236,13 @@ export default function AppointmentBookingModal({
 
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate form
+    if (!bookingForm.doctor || !bookingForm.date || !bookingForm.time || !bookingForm.concern) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -368,7 +256,6 @@ export default function AppointmentBookingModal({
 
       toast.success('Appointment booked successfully!');
       onBookingSuccess(response.data);
-      onClose();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to book appointment');
       console.error('Error booking appointment:', error);
@@ -380,6 +267,24 @@ export default function AppointmentBookingModal({
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setBookingForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleDoctorSelect = (doctor) => {
+    setBookingForm({
+      doctor,
+      date: "",
+      time: "",
+      concern: bookingForm.concern,
+      notes: bookingForm.notes,
+    });
+  };
+
+  const handleDateSelect = (date) => {
+    setBookingForm(prev => ({ 
+      ...prev, 
+      date,
+      time: "" // Reset time when date changes
+    }));
   };
 
   if (!isOpen) return null;
@@ -404,17 +309,12 @@ export default function AppointmentBookingModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dermatologist
+                Dermatologist*
               </label>
               <DoctorDropdown
                 doctors={doctors}
                 selectedDoctor={bookingForm.doctor}
-                onSelect={(doctor) => setBookingForm({
-                  ...bookingForm, 
-                  doctor, 
-                  date: "", 
-                  time: ""
-                })}
+                onSelect={handleDoctorSelect}
                 placeholder="Select a dermatologist"
                 isLoading={isLoadingDoctors}
               />
@@ -422,45 +322,17 @@ export default function AppointmentBookingModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Appointment Date
+                Appointment Date*
               </label>
-              <input
-                type="text"
-                name="date"
-                value={bookingForm.date ? 
-                  new Date(
-                    ...bookingForm.date.split('-').map((v, i) => i === 1 ? v - 1 : v)
-                  ).toLocaleDateString('en-US', { 
-                    weekday: 'short', 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric' 
-                  }) : ''}
-                onClick={() => setShowCalendar(!showCalendar)}
-                readOnly
-                className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 cursor-pointer ${
-                  !bookingForm.doctor ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
-                }`}
-                placeholder="Select a date"
-                required
-                disabled={!bookingForm.doctor}
+              <DateDropdown
+                selectedDate={bookingForm.date}
+                onDateChange={handleDateSelect}
               />
-              {showCalendar && (
-                <div className="mt-2 z-10">
-                  <Calendar
-                    selectedDate={bookingForm.date}
-                    onDateChange={(date) => {
-                      setBookingForm(prev => ({ ...prev, date, time: "" }));
-                      setShowCalendar(false);
-                    }}
-                  />
-                </div>
-              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Appointment Time
+                Appointment Time*
               </label>
               <select
                 name="time"
@@ -472,7 +344,7 @@ export default function AppointmentBookingModal({
                 required
                 disabled={!bookingForm.date}
               >
-                <option value="">Select a time</option>
+                <option value="">{bookingForm.date ? "Select a time" : "First select a date"}</option>
                 {availableTimes.map((time) => (
                   <option key={time} value={time}>
                     {time}
@@ -484,7 +356,7 @@ export default function AppointmentBookingModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Skin Concern
+              Skin Concern*
             </label>
             <input
               type="text"
@@ -516,11 +388,17 @@ export default function AppointmentBookingModal({
               <h3 className="text-sm font-medium text-gray-700 mb-2">Selected Dermatologist</h3>
               <div className="flex items-center space-x-4">
                 <div className="flex-shrink-0">
-                  <img
-                    className="h-16 w-16 rounded-full object-cover"
-                    src={bookingForm.doctor.image || "/dermatologist-placeholder.jpg"}
-                    alt="Dermatologist"
-                  />
+                  {bookingForm.doctor.image ? (
+                    <img
+                      className="h-16 w-16 rounded-full object-cover"
+                      src={bookingForm.doctor.image}
+                      alt="Dermatologist"
+                    />
+                  ) : (
+                    <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
+                      <FiUser className="text-gray-500 h-8 w-8" />
+                    </div>
+                  )}
                 </div>
                 <div>
                   <h4 className="text-lg font-medium text-gray-900">
