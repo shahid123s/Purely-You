@@ -7,6 +7,7 @@ import {
   FiClock,
   FiEdit,
   FiTrash2,
+  FiLink,
 } from "react-icons/fi";
 import patientAxiosInstance from "../../utils/patientAxios";
 import { toast } from "sonner";
@@ -566,6 +567,12 @@ export default function PatientProfile() {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
+  const handleAttendMeeting = (appointmentId) => {
+    // Implement meeting attendance logic here
+    toast.info("Redirecting to meeting...");
+    // In a real app, you would redirect to the meeting URL
+  };
+
   return (
     <main>
       <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -667,6 +674,7 @@ export default function PatientProfile() {
                         <option value="upcoming">Upcoming</option>
                         <option value="completed">Completed</option>
                         <option value="cancelled">Cancelled</option>
+                        <option value="scheduled">Scheduled</option>
                       </select>
                       <button
                         onClick={openBookingModal}
@@ -703,7 +711,7 @@ export default function PatientProfile() {
                                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                       pendingReschedules[appointment._id]
                                         ? "bg-yellow-100 text-yellow-800"
-                                        : appointment.status === "upcoming"
+                                        : appointment.status === "upcoming" || appointment.status === "scheduled"
                                         ? "bg-green-100 text-green-800"
                                         : appointment.status === "completed"
                                         ? "bg-blue-100 text-blue-800"
@@ -740,15 +748,38 @@ export default function PatientProfile() {
                               </div>
 
                               <div className="mt-4 md:mt-0 flex items-center space-x-2">
-                                {appointment.status === "upcoming" && (
+                                {appointment.uiState?.buttonState === "giveLink" && (
+                                  <button
+                                    onClick={() => handleAttendMeeting(appointment._id)}
+                                    className="px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 flex items-center"
+                                  >
+                                    <FiLink className="mr-1 h-4 w-4" />
+                                    Attend Meeting
+                                  </button>
+                                )}
+
+                                {appointment.uiState?.buttonState === "submitRecord" && (
+                                  <div className="text-sm text-gray-500 flex items-center">
+                                    <FiClock className="mr-1 h-4 w-4" />
+                                    Waiting for doctor to submit record
+                                  </div>
+                                )}
+
+                                {appointment.uiState?.buttonState === "completed" && appointment.notes && (
+                                  <button
+                                    className="px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 flex items-center"
+                                    onClick={() => viewMedicalRecord(appointment.notes)}
+                                  >
+                                    <FiEdit className="mr-1 h-4 w-4" />
+                                    View Treatment Summary
+                                  </button>
+                                )}
+
+                                {(appointment.status === "upcoming" || appointment.status === "scheduled") && !appointment.uiState?.buttonState && (
                                   <>
                                     <button
-                                      onClick={() =>
-                                        openRescheduleModal(appointment)
-                                      }
-                                      disabled={
-                                        pendingReschedules[appointment._id]
-                                      }
+                                      onClick={() => openRescheduleModal(appointment)}
+                                      disabled={pendingReschedules[appointment._id]}
                                       className={`px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 ${
                                         pendingReschedules[appointment._id]
                                           ? "opacity-50 cursor-not-allowed"
@@ -765,30 +796,13 @@ export default function PatientProfile() {
                                           ? "opacity-50 cursor-not-allowed"
                                           : ""
                                       }`}
-                                      onClick={() =>
-                                        cancelAppointment(appointment._id)
-                                      }
-                                      disabled={
-                                        pendingReschedules[appointment._id]
-                                      }
+                                      onClick={() => cancelAppointment(appointment._id)}
+                                      disabled={pendingReschedules[appointment._id]}
                                     >
                                       Cancel
                                     </button>
                                   </>
                                 )}
-                                {appointment.status === "completed" &&
-                                  appointment.medicalRecord && (
-                                    <button
-                                      className="px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
-                                      onClick={() =>
-                                        viewMedicalRecord(
-                                          appointment.medicalRecord
-                                        )
-                                      }
-                                    >
-                                      View Details
-                                    </button>
-                                  )}
                               </div>
                             </div>
                           </div>
