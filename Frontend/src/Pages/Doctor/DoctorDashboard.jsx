@@ -25,7 +25,7 @@ export default function DoctorDashboard() {
         // Initialize appointment actions state
         const actions = {};
         response.data.data.forEach(apt => {
-          if (isToday(apt.appointmentDate)) {
+          if (isToday(apt.appointmentDate) && apt.status === "scheduled") {
             actions[apt._id] = { 
               buttonState: 'giveLink', 
               attended: false 
@@ -53,15 +53,14 @@ export default function DoctorDashboard() {
   };
 
   const isToday = (dateString) => {
-    const today = new Date().toISOString().split('T')[0];
-    const appointmentDate = new Date(dateString).toISOString().split('T')[0];
-    return today === appointmentDate;
-  };
-
-  const isUpcoming = (dateString) => {
     const today = new Date();
     const appointmentDate = new Date(dateString);
-    return appointmentDate > today && !isToday(dateString);
+    
+    return (
+      today.getFullYear() === appointmentDate.getFullYear() &&
+      today.getMonth() === appointmentDate.getMonth() &&
+      today.getDate() === appointmentDate.getDate()
+    );
   };
 
   // Appointment actions
@@ -173,18 +172,25 @@ export default function DoctorDashboard() {
     }
   };
 
-  // Filter appointments
+  // Filter appointments according to the specified logic
   const filteredAppointments = appointments.filter(apt => {
     const matchesSearch = apt.patientName.toLowerCase().includes(searchTerm.toLowerCase());
-    const appointmentDate = new Date(apt.appointmentDate);
-    const today = new Date();
     
     if (activeTab === "today") {
       return isToday(apt.appointmentDate) && apt.status === "scheduled" && matchesSearch;
     }
     
     if (activeTab === "upcoming") {
-      return (isUpcoming(apt.appointmentDate) && ["pending", "scheduled"].includes(apt.status) && matchesSearch);
+      const appointmentDate = new Date(apt.appointmentDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Normalize today's date
+      
+      return (
+        (apt.status === "pending" || apt.status === "scheduled") && // Include both pending & scheduled
+        appointmentDate > today && // Future dates only
+        !isToday(apt.appointmentDate) && // Exclude today's appointments
+        matchesSearch
+      );
     }
     
     if (activeTab === "past") {
@@ -232,7 +238,7 @@ export default function DoctorDashboard() {
           />
           <StatCard 
             title="Pending Approvals"
-            value={appointments.filter(apt => apt.status === "pending").length}
+            value={appointments.filter(apt => apt.status === "pending" && !isToday(apt.appointmentDate)).length}
             icon={<Clock className="h-5 w-5" />}
             color="yellow"
           />
