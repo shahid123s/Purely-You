@@ -12,7 +12,6 @@ export default function DoctorDashboard() {
   const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [appointmentActions, setAppointmentActions] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,18 +20,6 @@ export default function DoctorDashboard() {
         setIsLoading(true);
         const response = await doctorAxiosInstance.get('/appointments');
         setAppointments(response.data.data);
-        
-        // Initialize appointment actions state
-        const actions = {};
-        response.data.data.forEach(apt => {
-          if (isToday(apt.appointmentDate) && apt.status === "scheduled") {
-            actions[apt._id] = { 
-              buttonState: 'giveLink', 
-              attended: false 
-            };
-          }
-        });
-        setAppointmentActions(actions);
       } catch (error) {
         console.error('Error fetching appointments:', error);
         toast.error('Failed to load appointments');
@@ -64,23 +51,54 @@ export default function DoctorDashboard() {
   };
 
   // Appointment actions
-  const generateMeetingLink = (appointmentId) => {
-    const meetingLink = `${window.location.origin}/doctor/call/${appointmentId}`;
-    navigator.clipboard.writeText(meetingLink);
-    setAppointmentActions(prev => ({
-      ...prev,
-      [appointmentId]: { ...prev[appointmentId], buttonState: 'attended' }
-    }));
-    toast.success('Meeting link copied to clipboard!');
+  const generateMeetingLink = async (appointmentId) => {
+    try {
+      const meetingLink = `${window.location.origin}/doctor/call/${appointmentId}`;
+      await navigator.clipboard.writeText(meetingLink);
+  
+      const response = await doctorAxiosInstance.put(`/appointments/${appointmentId}/ui-state`, {
+        buttonState: "attended",
+        attended: false
+      });
+  
+      if (response.data.success) {
+        setAppointments(prev => prev.map(apt => 
+          apt._id === appointmentId 
+            ? { ...apt, uiState: { buttonState: "attended", attended: false } }
+            : apt
+        ));
+        toast.success('Meeting link copied to clipboard!');
+      } else {
+        toast.error('Failed to update appointment state');
+      }
+    } catch (error) {
+      console.error('Error generating link:', error);
+      toast.error('Failed to copy meeting link');
+    }
   };
-
-  const markAsAttended = (appointmentId) => {
-    setAppointmentActions(prev => ({
-      ...prev,
-      [appointmentId]: { ...prev[appointmentId], buttonState: 'submitRecord' }
-    }));
+  
+  const markAsAttended = async (appointmentId) => {
+    try {
+      const response = await doctorAxiosInstance.put(`/appointments/${appointmentId}/ui-state`, {
+        buttonState: "submitRecord",
+        attended: true
+      });
+  
+      if (response.data.success) {
+        setAppointments(prev => prev.map(apt => 
+          apt._id === appointmentId 
+            ? { ...apt, uiState: { buttonState: "submitRecord", attended: true } }
+            : apt
+        ));
+      } else {
+        toast.error('Failed to update appointment status');
+      }
+    } catch (error) {
+      console.error('Error marking as attended:', error);
+      toast.error('Failed to update appointment status');
+    }
   };
-
+  
   const acceptAppointment = async (appointmentId) => {
     try {
       const response = await doctorAxiosInstance.put(`/appointments/${appointmentId}`, {
@@ -88,19 +106,19 @@ export default function DoctorDashboard() {
       });
       
       if (response.data.success) {
-        setAppointments(appointments.map(apt => 
+        setAppointments(prev => prev.map(apt => 
           apt._id === appointmentId ? { ...apt, status: "scheduled" } : apt
         ));
         toast.success('Appointment approved successfully');
       } else {
-        toast.error('Failed to approve appointment');
+        toast.error(response.data.message || 'Failed to approve appointment');
       }
     } catch (error) {
       console.error('Error approving appointment:', error);
       toast.error('Failed to approve appointment');
     }
   };
-
+  
   const rejectAppointment = async (appointmentId) => {
     try {
       const response = await doctorAxiosInstance.put(`/appointments/${appointmentId}`, {
@@ -108,12 +126,12 @@ export default function DoctorDashboard() {
       });
       
       if (response.data.success) {
-        setAppointments(appointments.map(apt => 
+        setAppointments(prev => prev.map(apt => 
           apt._id === appointmentId ? { ...apt, status: "rejected" } : apt
         ));
         toast.success('Appointment rejected');
       } else {
-        toast.error('Failed to reject appointment');
+        toast.error(response.data.message || 'Failed to reject appointment');
       }
     } catch (error) {
       console.error('Error rejecting appointment:', error);
@@ -125,70 +143,72 @@ export default function DoctorDashboard() {
     navigate(`/doctor/call/${appointmentId}`);
   };
 
-  const handleMedicalRecordSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await doctorAxiosInstance.put(`/appointments/${selectedAppointment._id}`, {
-        notes: medicalRecord,
-        status: "completed"
-      });
-      
-      if (response.data.success) {
-        setAppointments(appointments.map(apt => 
-          apt._id === selectedAppointment._id ? 
-          { ...apt, status: "completed", notes: medicalRecord } : apt
-        ));
-        
-        toast.success('Appointment completed successfully');
-        setIsMedicalRecordModalOpen(false);
-        setMedicalRecord("");
-        setSelectedAppointment(null);
-      } else {
-        toast.error('Failed to complete appointment');
-      }
-    } catch (error) {
-      console.error('Error updating appointment:', error);
-      toast.error('Failed to complete appointment');
-    }
-  };
+  
 
-  const markNoShow = async (appointmentId) => {
-    try {
-      const response = await doctorAxiosInstance.put(`/appointments/${appointmentId}`, { 
-        status: "no-show" 
-      });
+const handleMedicalRecordSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const response = await doctorAxiosInstance.put(`/appointments/${selectedAppointment._id}`, {
+      notes: medicalRecord,
+      status: "completed"
+    });
+    
+    if (response.data.success) {
+      setAppointments(prev => prev.map(apt => 
+        apt._id === selectedAppointment._id 
+          ? { ...apt, status: "completed", notes: medicalRecord, uiState: undefined }
+          : apt
+      ));
       
-      if (response.data.success) {
-        setAppointments(appointments.map(apt => 
-          apt._id === appointmentId ? { ...apt, status: "no-show" } : apt
-        ));
-        toast.success('Marked as no-show');
-      } else {
-        toast.error('Failed to update appointment status');
-      }
-    } catch (error) {
-      console.error('Error marking no-show:', error);
-      toast.error('Failed to update appointment status');
+      toast.success('Appointment completed successfully');
+      setIsMedicalRecordModalOpen(false);
+      setMedicalRecord("");
+      setSelectedAppointment(null);
+    } else {
+      toast.error(response.data.message || 'Failed to complete appointment');
     }
-  };
+  } catch (error) {
+    console.error('Error updating appointment:', error);
+    toast.error('Failed to complete appointment');
+  }
+};
 
-  // Filter appointments according to the specified logic
+const markNoShow = async (appointmentId) => {
+  try {
+    const response = await doctorAxiosInstance.put(`/appointments/${appointmentId}`, { 
+      status: "no-show" 
+    });
+    
+    if (response.data.success) {
+      setAppointments(prev => prev.map(apt => 
+        apt._id === appointmentId ? { ...apt, status: "no-show" } : apt
+      ));
+      toast.success('Marked as no-show');
+    } else {
+      toast.error(response.data.message || 'Failed to update appointment status');
+    }
+  } catch (error) {
+    console.error('Error marking no-show:', error);
+    toast.error('Failed to update appointment status');
+  }
+};
+
+  // Filter appointments
   const filteredAppointments = appointments.filter(apt => {
     const matchesSearch = apt.patientName.toLowerCase().includes(searchTerm.toLowerCase());
+    const appointmentDate = new Date(apt.appointmentDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
     if (activeTab === "today") {
       return isToday(apt.appointmentDate) && apt.status === "scheduled" && matchesSearch;
     }
     
     if (activeTab === "upcoming") {
-      const appointmentDate = new Date(apt.appointmentDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Normalize today's date
-      
       return (
-        (apt.status === "pending" || apt.status === "scheduled") && // Include both pending & scheduled
-        appointmentDate > today && // Future dates only
-        !isToday(apt.appointmentDate) && // Exclude today's appointments
+        (apt.status === "pending" || apt.status === "scheduled") &&
+        appointmentDate > today &&
+        !isToday(apt.appointmentDate) &&
         matchesSearch
       );
     }
@@ -320,7 +340,7 @@ export default function DoctorDashboard() {
                     onAccept={acceptAppointment}
                     onReject={rejectAppointment}
                     activeTab={activeTab}
-                    buttonState={appointmentActions[appointment._id]?.buttonState || 'giveLink'}
+                    buttonState={appointment.uiState?.buttonState || 'giveLink'}
                   />
                 ))}
               </div>
@@ -356,7 +376,7 @@ export default function DoctorDashboard() {
   );
 }
 
-// Sub-components
+// Sub-components remain the same as before
 const StatCard = ({ title, value, icon, color }) => {
   const colorClasses = {
     blue: { bg: 'bg-blue-100', text: 'text-blue-600' },
