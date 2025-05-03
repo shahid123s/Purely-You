@@ -3,6 +3,7 @@ import { adminRepository } from "../admin/adminRepository.js";
 import { adminServices } from "../admin/adminServices.js";
 import { getAllDoctors, getAppointments } from "./userController.js";
 import { userRepository } from "./userRepository.js";
+import { appointmentRepository } from "../appoinments/appoinmentRepository.js";
 
 export const userServices = {
     getUserDetails:async (userId) => {
@@ -23,7 +24,7 @@ export const userServices = {
     },
     getAppointmentsOfUser: async (userId) => {
         try {
-            const appointments = await userRepository.getAppointments(userId);
+            const appointments = await appointmentRepository.getAppointments(userId);
             return appointments;
         } catch (error) {
             throw new CustomError("Error in getting appointments" + error.message, 500);

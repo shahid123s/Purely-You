@@ -92,10 +92,11 @@ export const authServices = {
 
                 const [accessToken, refreshToken] = await Promise.all([
                     generateAccessToken(doctor._id, doctor.role),
-                    generateRefreshToken(doctor._id, doctor.role)
+                    generateRefreshToken(doctor._id, doctor.role),
                 ]);
-
-            return { accessToken, refreshToken, doctor:  { ...doctor, password: undefined} };
+                const roomId = crypto.randomUUID();
+                // await
+            return { accessToken, refreshToken, doctor:  { ...doctor, password: undefined, roomId } };
 
 
             } catch (error) {

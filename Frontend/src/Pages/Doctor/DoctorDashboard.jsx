@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Check } from 'lucide-react';
 import image from '../../assets/doctor1.jpg';
+import { useNavigate } from "react-router-dom";
 
 export default function DoctorDashboard() {
   const [activeTab, setActiveTab] = useState("today");
   const [isMedicalRecordModalOpen, setIsMedicalRecordModalOpen] = useState(false);
   const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
   const [medicalRecord, setMedicalRecord] = useState("");
+  const navigate = useNavigate()
   const [appointments, setAppointments] = useState([
     {
       id: "apt-001",
@@ -66,9 +68,11 @@ export default function DoctorDashboard() {
   ]);
 
   const completeAppointment = (id) => {
-    setSelectedAppointmentId(id);
-    setMedicalRecord("");
-    setIsMedicalRecordModalOpen(true);
+    navigate('/doctor/call');
+
+    // setSelectedAppointmentId(id);
+    // setMedicalRecord("");
+    // setIsMedicalRecordModalOpen(true);
   };
 
   const handleMedicalRecordSubmit = (e) => {
@@ -293,7 +297,7 @@ export default function DoctorDashboard() {
                                 onClick={() => completeAppointment(appointment.id)}
                               >
                                 <Check />
-                                Complete
+                                Attend
                               </button>
                               <button
                                 className="flex items-center px-3 py-1.5 border border-red-200 text-sm font-medium rounded text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"

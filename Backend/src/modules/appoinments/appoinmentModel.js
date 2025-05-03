@@ -3,12 +3,34 @@ import mongoose from 'mongoose';
 const { Schema, model } = mongoose;
 
 const doctorAppointmentSchema = new Schema({
-  id: String,
-  patientName: String,
-  doctorName: String, 
-  appointmentDate: Date,
-  appointmentTime: String,
+  doctorId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Doctor',
+    required: true
+  },
+  doctorName: {
+    type: String,
+    required: true
+  },
+  patientId: {
+    type: Schema.Types.ObjectId, 
+    ref: 'Patient',
+    required: true
+  },
+  patientName: {
+    type: String,
+    required: true
+  },
+  appointmentDate: {
+    type: Date,
+    required: true
+  },
+  appointmentTime: {
+    type: String,
+    required: true
+  },
   reason: String,
+  roomId: String,
   status: {
     type: String,
     enum: ['scheduled', 'completed', 'cancelled', 'rescheduled'],
@@ -28,3 +50,4 @@ const doctorAppointmentSchema = new Schema({
 const DoctorAppointment = model('DoctorAppointment', doctorAppointmentSchema);
 
 export default DoctorAppointment;
+  
