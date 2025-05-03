@@ -1,3 +1,4 @@
+import { patient } from "../auth/authRoute.js";
 import { userServices } from "./userServices.js";
 
 export const getPatientProfile = async (req, res, next) => {
@@ -64,8 +65,8 @@ export const getAppointments = async (req, res, next) => {
 
 export const bookAppointment = async (req, res, next) => {
     try {
-
-        console.log(req.body, 'req.body in userController');
+        const userId = req.patient;
+        console.log({...req.body, patientId : userId}, 'req.body in userController');
 
         // const result = await userServices.bookAppointment(req.body);
 

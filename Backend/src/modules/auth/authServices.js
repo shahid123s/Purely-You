@@ -25,7 +25,7 @@ export const authServices = {
                     generateRefreshToken(user._id, user.role)
                 ]);
 
-                return { accessToken, refreshToken };
+                return { accessToken, refreshToken , name : user.name};
 
 
             } catch (error) {

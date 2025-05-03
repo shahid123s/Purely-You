@@ -248,10 +248,12 @@ export default function AppointmentBookingModal({
     try {
       const response = await patientAxiosInstance.post('/book-appointment', {
         doctorId: bookingForm.doctor._id,
-        date: bookingForm.date,
-        time: bookingForm.time,
-        concern: bookingForm.concern,
+        doctorName: bookingForm.doctor.name,  
+        appointmentDate: bookingForm.date,
+        appointmentTime: bookingForm.time,
+        reason: bookingForm.concern,
         notes: bookingForm.notes,
+
       });
 
       toast.success('Appointment booked successfully!');

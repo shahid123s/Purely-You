@@ -12,7 +12,7 @@ export const authController = {
         console.log(email, password, req.body, 'User Login in Controller')
         try {
 
-            const {accessToken, refreshToken} = await authServices.patientAuthServices.userLogin(email, password);
+            const {accessToken, refreshToken, name} = await authServices.patientAuthServices.userLogin(email, password);
 
             console.log(accessToken, refreshToken, 'Access Token and Refresh Token in Controller')
 
@@ -35,6 +35,7 @@ export const authController = {
                     success: true,
                     message: "User Login Successfully",
                     accessToken,
+                    name,
                 })
 
         } catch (error) {

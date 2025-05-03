@@ -36,6 +36,7 @@ const doctorAppointmentSchema = new Schema({
     enum: ['scheduled', 'completed', 'cancelled', 'rescheduled'],
     default: 'scheduled'
   },
+  notes: String,
   createdAt: {
     type: Date,
     default: Date.now
