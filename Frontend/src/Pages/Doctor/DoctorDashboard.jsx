@@ -1,12 +1,22 @@
 import { useEffect, useState } from "react";
-import { Check, Clock, Calendar, User, Search, Copy, Video, FileText } from 'lucide-react';
+import {
+  Check,
+  Clock,
+  Calendar,
+  User,
+  Search,
+  Copy,
+  Video,
+  FileText,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import doctorAxiosInstance from "../../utils/doctorAxiosInstance";
-import { toast } from 'sonner';
+import { toast } from "sonner";
 
 export default function DoctorDashboard() {
   const [activeTab, setActiveTab] = useState("today");
-  const [isMedicalRecordModalOpen, setIsMedicalRecordModalOpen] = useState(false);
+  const [isMedicalRecordModalOpen, setIsMedicalRecordModalOpen] =
+    useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [medicalRecord, setMedicalRecord] = useState("");
   const [appointments, setAppointments] = useState([]);
@@ -18,11 +28,11 @@ export default function DoctorDashboard() {
     const fetchAppointments = async () => {
       try {
         setIsLoading(true);
-        const response = await doctorAxiosInstance.get('/appointments');
+        const response = await doctorAxiosInstance.get("/appointments");
         setAppointments(response.data.data);
       } catch (error) {
-        console.error('Error fetching appointments:', error);
-        toast.error('Failed to load appointments');
+        console.error("Error fetching appointments:", error);
+        toast.error("Failed to load appointments");
       } finally {
         setIsLoading(false);
       }
@@ -32,17 +42,17 @@ export default function DoctorDashboard() {
 
   // Date helpers
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const isToday = (dateString) => {
     const today = new Date();
     const appointmentDate = new Date(dateString);
-    
+
     return (
       today.getFullYear() === appointmentDate.getFullYear() &&
       today.getMonth() === appointmentDate.getMonth() &&
@@ -55,91 +65,108 @@ export default function DoctorDashboard() {
     try {
       const meetingLink = `${window.location.origin}/doctor/call/${appointmentId}`;
       await navigator.clipboard.writeText(meetingLink);
-  
+
       const response = await doctorAxiosInstance.put(`/appointments/ui-state`, {
         buttonState: "attended",
         attended: false,
-        appointmentId
+        appointmentId,
       });
-  
+
       if (response.data.success) {
-        setAppointments(prev => prev.map(apt => 
-          apt._id === appointmentId 
-            ? { ...apt, uiState: { buttonState: "attended", attended: false } }
-            : apt
-        ));
-        toast.success('Meeting link copied to clipboard!');
+        setAppointments((prev) =>
+          prev.map((apt) =>
+            apt._id === appointmentId
+              ? {
+                  ...apt,
+                  uiState: { buttonState: "attended", attended: false },
+                }
+              : apt
+          )
+        );
+        toast.success("Meeting link copied to clipboard!");
       } else {
-        toast.error('Failed to update appointment state');
+        toast.error("Failed to update appointment state");
       }
     } catch (error) {
-      console.error('Error generating link:', error);
-      toast.error('Failed to copy meeting link');
+      console.error("Error generating link:", error);
+      toast.error("Failed to copy meeting link");
     }
   };
-  
+
   const markAsAttended = async (appointmentId) => {
     try {
       const response = await doctorAxiosInstance.put(`/appointments/ui-state`, {
         buttonState: "submitRecord",
         attended: true,
-        appointmentId
+        appointmentId,
       });
-  
+
       if (response.data.success) {
-        setAppointments(prev => prev.map(apt => 
-          apt._id === appointmentId 
-            ? { ...apt, uiState: { buttonState: "submitRecord", attended: true } }
-            : apt
-        ));
+        setAppointments((prev) =>
+          prev.map((apt) =>
+            apt._id === appointmentId
+              ? {
+                  ...apt,
+                  uiState: { buttonState: "submitRecord", attended: true },
+                }
+              : apt
+          )
+        );
       } else {
-        toast.error('Failed to update appointment status');
+        toast.error("Failed to update appointment status");
       }
     } catch (error) {
-      console.error('Error marking as attended:', error);
-      toast.error('Failed to update appointment status');
+      console.error("Error marking as attended:", error);
+      toast.error("Failed to update appointment status");
     }
   };
-  
+
   const acceptAppointment = async (appointmentId) => {
     try {
-      console.log('varunna')
+      console.log("varunna");
       const response = await doctorAxiosInstance.put(`/accept-appointments`, {
         action: "scheduled",
         appointmentId,
       });
-      
+
       if (response.data.success) {
-        setAppointments(prev => prev.map(apt => 
-          apt._id === appointmentId ? { ...apt, status: "scheduled" } : apt
-        ));
-        toast.success('Appointment approved successfully');
+        setAppointments((prev) =>
+          prev.map((apt) =>
+            apt._id === appointmentId ? { ...apt, status: "scheduled" } : apt
+          )
+        );
+        toast.success("Appointment approved successfully");
       } else {
-        toast.error(response.data.message || 'Failed to approve appointment');
+        toast.error(response.data.message || "Failed to approve appointment");
       }
     } catch (error) {
-      console.error('Error approving appointment:', error);
-      toast.error('Failed to approve appointment');
+      console.error("Error approving appointment:", error);
+      toast.error("Failed to approve appointment");
     }
   };
-  
+
   const rejectAppointment = async (appointmentId) => {
     try {
-      const response = await doctorAxiosInstance.put(`/appointments/${appointmentId}`, {
-        status: "rejected"
-      });
-      
+      const response = await doctorAxiosInstance.put(
+        `/appointments/${appointmentId}`,
+        {
+          status: "rejected",
+        }
+      );
+
       if (response.data.success) {
-        setAppointments(prev => prev.map(apt => 
-          apt._id === appointmentId ? { ...apt, status: "rejected" } : apt
-        ));
-        toast.success('Appointment rejected');
+        setAppointments((prev) =>
+          prev.map((apt) =>
+            apt._id === appointmentId ? { ...apt, status: "rejected" } : apt
+          )
+        );
+        toast.success("Appointment rejected");
       } else {
-        toast.error(response.data.message || 'Failed to reject appointment');
+        toast.error(response.data.message || "Failed to reject appointment");
       }
     } catch (error) {
-      console.error('Error rejecting appointment:', error);
-      toast.error('Failed to reject appointment');
+      console.error("Error rejecting appointment:", error);
+      toast.error("Failed to reject appointment");
     }
   };
 
@@ -147,55 +174,70 @@ export default function DoctorDashboard() {
     navigate(`/doctor/call/${appointmentId}`);
   };
 
-  
+  const handleMedicalRecordSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await doctorAxiosInstance.put(
+        `/appointments/${selectedAppointment._id}`,
+        {
+          notes: medicalRecord,
+          status: "completed",
+        }
+      );
 
-const handleMedicalRecordSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const response = await doctorAxiosInstance.put(`/appointments/${selectedAppointment._id}`, {
-      notes: medicalRecord,
-      status: "completed"
-    });
-    
-    if (response.data.success) {
-      setAppointments(prev => prev.map(apt => 
-        apt._id === selectedAppointment._id 
-          ? { ...apt, status: "completed", notes: medicalRecord, uiState: undefined }
-          : apt
-      ));
-      
-      toast.success('Appointment completed successfully');
-      setIsMedicalRecordModalOpen(false);
-      setMedicalRecord("");
-      setSelectedAppointment(null);
-    } else {
-      toast.error(response.data.message || 'Failed to complete appointment');
-    }
-  } catch (error) {
-    console.error('Error updating appointment:', error);
-    toast.error('Failed to complete appointment');
-  }
-};
+      if (response.data.success) {
+        setAppointments((prev) =>
+          prev.map((apt) =>
+            apt._id === selectedAppointment._id
+              ? {
+                  ...apt,
+                  status: "completed",
+                  notes: medicalRecord,
+                  uiState: undefined,
+                }
+              : apt
+          )
+        );
 
-const markNoShow = async (appointmentId) => {
-  try {
-    const response = await doctorAxiosInstance.put(`/appointments/${appointmentId}`, { 
-      status: "no-show" 
-    });
-    
-    if (response.data.success) {
-      setAppointments(prev => prev.map(apt => 
-        apt._id === appointmentId ? { ...apt, status: "no-show" } : apt
-      ));
-      toast.success('Marked as no-show');
-    } else {
-      toast.error(response.data.message || 'Failed to update appointment status');
+        toast.success("Appointment completed successfully");
+        setIsMedicalRecordModalOpen(false);
+        setMedicalRecord("");
+        setSelectedAppointment(null);
+      } else {
+        toast.error(response.data.message || "Failed to complete appointment");
+      }
+    } catch (error) {
+      console.error("Error updating appointment:", error);
+      toast.error("Failed to complete appointment");
     }
-  } catch (error) {
-    console.error('Error marking no-show:', error);
-    toast.error('Failed to update appointment status');
-  }
-};
+  };
+
+  const markNoShow = async (appointmentId) => {
+    try {
+      const response = await doctorAxiosInstance.put(
+        `/appointments/${appointmentId}`,
+        {
+          status: "no-show",
+        }
+      );
+
+      if (response.data.success) {
+        setAppointments((prev) =>
+          prev.map((apt) =>
+            apt._id === appointmentId ? { ...apt, status: "no-show" } : apt
+          )
+        );
+        toast.success("Marked as no-show");
+      } else {
+        toast.error(
+          response.data.message || "Failed to update appointment status"
+        );
+      }
+    } catch (error) {
+      console.error("Error marking no-show:", error);
+      toast.error("Failed to update appointment status");
+    }
+  };
 
   // Filter appointments
   const filteredAppointments = appointments.filter(apt => {
@@ -205,18 +247,19 @@ const markNoShow = async (appointmentId) => {
     today.setHours(0, 0, 0, 0);
     
     if (activeTab === "today") {
+      // Strictly today's scheduled appointments only
       return (
         isToday(apt.appointmentDate) && 
-        (apt.status === "scheduled" || apt.status === "pending") && // Include pending
+        apt.status === "scheduled" && 
         matchesSearch
       );
     }
     
     if (activeTab === "upcoming") {
+      // Pending (any date) OR scheduled (future only, not today)
       return (
-        (apt.status === "pending" || apt.status === "scheduled") &&
-        appointmentDate > today &&
-        !isToday(apt.appointmentDate) &&
+        (apt.status === "pending" || 
+         (apt.status === "scheduled" && appointmentDate > today)) &&
         matchesSearch
       );
     }
@@ -242,15 +285,21 @@ const markNoShow = async (appointmentId) => {
         {/* Dashboard Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Doctor Dashboard</h1>
-            <p className="text-gray-600">Manage your appointments and patient records</p>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Doctor Dashboard
+            </h1>
+            <p className="text-gray-600">
+              Manage your appointments and patient records
+            </p>
           </div>
           <div className="flex items-center space-x-2">
             <div className="relative h-10 w-10 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
               <User className="text-gray-600" />
             </div>
             <div>
-              <p className="font-medium">Dr. {appointments[0]?.doctorName || 'User'}</p>
+              <p className="font-medium">
+                Dr. {appointments[0]?.doctorName || "User"}
+              </p>
               <p className="text-sm text-gray-600">Dermatologist</p>
             </div>
           </div>
@@ -258,27 +307,38 @@ const markNoShow = async (appointmentId) => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <StatCard 
+          <StatCard
             title="Today's Appointments"
-            value={appointments.filter(apt => isToday(apt.appointmentDate) && apt.status === "scheduled").length}
+            value={
+              appointments.filter(
+                (apt) =>
+                  isToday(apt.appointmentDate) && apt.status === "scheduled" // Only scheduled
+              ).length
+            }
             icon={<Calendar className="h-5 w-5" />}
             color="blue"
           />
-          <StatCard 
+          <StatCard
             title="Pending Approvals"
-            value={appointments.filter(apt => apt.status === "pending" && !isToday(apt.appointmentDate)).length}
+            value={
+              appointments.filter(
+                (apt) => apt.status === "pending" // All pending, regardless of date
+              ).length
+            }
             icon={<Clock className="h-5 w-5" />}
             color="yellow"
           />
-          <StatCard 
+          <StatCard
             title="Completed"
-            value={appointments.filter(apt => apt.status === "completed").length}
+            value={
+              appointments.filter((apt) => apt.status === "completed").length
+            }
             icon={<Check className="h-5 w-5" />}
             color="green"
           />
-          <StatCard 
+          <StatCard
             title="Total Patients"
-            value={new Set(appointments.map(apt => apt.patientId)).size}
+            value={new Set(appointments.map((apt) => apt.patientId)).size}
             icon={<User className="h-5 w-5" />}
             color="purple"
           />
@@ -288,19 +348,19 @@ const markNoShow = async (appointmentId) => {
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="border-b border-gray-200">
             <div className="grid grid-cols-3">
-              <TabButton 
+              <TabButton
                 active={activeTab === "today"}
                 onClick={() => setActiveTab("today")}
               >
                 Today's Schedule
               </TabButton>
-              <TabButton 
+              <TabButton
                 active={activeTab === "upcoming"}
                 onClick={() => setActiveTab("upcoming")}
               >
                 Upcoming
               </TabButton>
-              <TabButton 
+              <TabButton
                 active={activeTab === "past"}
                 onClick={() => setActiveTab("past")}
               >
@@ -313,8 +373,11 @@ const markNoShow = async (appointmentId) => {
             {/* Search and Filter */}
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">
-                {activeTab === "today" ? "Today's Appointments" : 
-                 activeTab === "upcoming" ? "Upcoming Appointments" : "Past Appointments"}
+                {activeTab === "today"
+                  ? "Today's Appointments"
+                  : activeTab === "upcoming"
+                  ? "Upcoming Appointments"
+                  : "Past Appointments"}
               </h2>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -333,8 +396,8 @@ const markNoShow = async (appointmentId) => {
             {/* Appointments List */}
             {filteredAppointments.length > 0 ? (
               <div className="space-y-4">
-                {filteredAppointments.map(appointment => (
-                  <AppointmentCard 
+                {filteredAppointments.map((appointment) => (
+                  <AppointmentCard
                     key={appointment._id}
                     appointment={appointment}
                     onComplete={() => {
@@ -348,20 +411,22 @@ const markNoShow = async (appointmentId) => {
                     onAccept={acceptAppointment}
                     onReject={rejectAppointment}
                     activeTab={activeTab}
-                    buttonState={appointment.uiState?.buttonState || 'giveLink'}
+                    buttonState={appointment.uiState?.buttonState || "giveLink"}
                   />
                 ))}
               </div>
             ) : (
-              <EmptyState message={
-                searchTerm ? 
-                "No appointments match your search" : 
-                activeTab === "today" ? 
-                "No appointments scheduled for today" : 
-                activeTab === "upcoming" ?
-                "No upcoming appointments" :
-                "No past appointments found"
-              } />
+              <EmptyState
+                message={
+                  searchTerm
+                    ? "No appointments match your search"
+                    : activeTab === "today"
+                    ? "No appointments scheduled for today"
+                    : activeTab === "upcoming"
+                    ? "No upcoming appointments"
+                    : "No past appointments found"
+                }
+              />
             )}
           </div>
         </div>
@@ -387,11 +452,11 @@ const markNoShow = async (appointmentId) => {
 // Sub-components remain the same as before
 const StatCard = ({ title, value, icon, color }) => {
   const colorClasses = {
-    blue: { bg: 'bg-blue-100', text: 'text-blue-600' },
-    green: { bg: 'bg-green-100', text: 'text-green-600' },
-    red: { bg: 'bg-red-100', text: 'text-red-600' },
-    purple: { bg: 'bg-purple-100', text: 'text-purple-600' },
-    yellow: { bg: 'bg-yellow-100', text: 'text-yellow-600' }
+    blue: { bg: "bg-blue-100", text: "text-blue-600" },
+    green: { bg: "bg-green-100", text: "text-green-600" },
+    red: { bg: "bg-red-100", text: "text-red-600" },
+    purple: { bg: "bg-purple-100", text: "text-purple-600" },
+    yellow: { bg: "bg-yellow-100", text: "text-yellow-600" },
   };
 
   return (
@@ -401,7 +466,9 @@ const StatCard = ({ title, value, icon, color }) => {
           <p className="text-sm font-medium text-gray-500">{title}</p>
           <p className="text-2xl font-bold">{value}</p>
         </div>
-        <div className={`h-12 w-12 rounded-full ${colorClasses[color].bg} flex items-center justify-center ${colorClasses[color].text}`}>
+        <div
+          className={`h-12 w-12 rounded-full ${colorClasses[color].bg} flex items-center justify-center ${colorClasses[color].text}`}
+        >
           {icon}
         </div>
       </div>
@@ -412,7 +479,9 @@ const StatCard = ({ title, value, icon, color }) => {
 const TabButton = ({ children, active, onClick }) => (
   <button
     className={`py-4 text-center text-sm font-medium ${
-      active ? "text-cyan-600 border-b-2 border-cyan-500" : "text-gray-500 hover:text-gray-700"
+      active
+        ? "text-cyan-600 border-b-2 border-cyan-500"
+        : "text-gray-500 hover:text-gray-700"
     }`}
     onClick={onClick}
   >
@@ -420,17 +489,17 @@ const TabButton = ({ children, active, onClick }) => (
   </button>
 );
 
-const AppointmentCard = ({ 
-  appointment, 
-  onComplete, 
-  onStartCall, 
-  onNoShow, 
+const AppointmentCard = ({
+  appointment,
+  onComplete,
+  onStartCall,
+  onNoShow,
   onCopyLink,
   onMarkAttended,
   onAccept,
   onReject,
   activeTab,
-  buttonState
+  buttonState,
 }) => {
   const isPending = appointment.status === "pending";
   const isTodayAppointment = activeTab === "today";
@@ -439,7 +508,7 @@ const AppointmentCard = ({
 
   const renderTodayButtons = () => {
     switch (buttonState) {
-      case 'giveLink':
+      case "giveLink":
         return (
           <button
             className="flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
@@ -449,7 +518,7 @@ const AppointmentCard = ({
             Give Link
           </button>
         );
-      case 'attended':
+      case "attended":
         return (
           <button
             className="flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -459,7 +528,7 @@ const AppointmentCard = ({
             Attended
           </button>
         );
-      case 'submitRecord':
+      case "submitRecord":
         return (
           <button
             className="flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
@@ -485,13 +554,19 @@ const AppointmentCard = ({
             <div>
               <div className="flex items-center space-x-2">
                 <h4 className="font-semibold">{appointment.patientName}</h4>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  appointment.status === "pending" ? "bg-yellow-100 text-yellow-800" :
-                  appointment.status === "scheduled" ? "bg-blue-100 text-blue-800" :
-                  appointment.status === "completed" ? "bg-green-100 text-green-800" :
-                  appointment.status === "no-show" ? "bg-red-100 text-red-800" :
-                  "bg-gray-100 text-gray-800"
-                }`}>
+                <span
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    appointment.status === "pending"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : appointment.status === "scheduled"
+                      ? "bg-blue-100 text-blue-800"
+                      : appointment.status === "completed"
+                      ? "bg-green-100 text-green-800"
+                      : appointment.status === "no-show"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
                   {appointment.status}
                 </span>
               </div>
@@ -512,7 +587,9 @@ const AppointmentCard = ({
               <>
                 <button
                   className="flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                  onClick={() => {onAccept(appointment._id)}}
+                  onClick={() => {
+                    onAccept(appointment._id);
+                  }}
                 >
                   <Check className="mr-1 h-4 w-4" />
                   Approve
@@ -562,12 +639,19 @@ const EmptyState = ({ message }) => (
   </div>
 );
 
-const MedicalRecordModal = ({ isOpen, onClose, onSubmit, medicalRecord, setMedicalRecord, patientName }) => {
+const MedicalRecordModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  medicalRecord,
+  setMedicalRecord,
+  patientName,
+}) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div 
+      <div
         className="bg-white rounded-lg p-6 w-full max-w-md"
         onClick={(e) => e.stopPropagation()}
       >
