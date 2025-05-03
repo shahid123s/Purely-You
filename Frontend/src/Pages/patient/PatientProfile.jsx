@@ -697,7 +697,7 @@ export default function PatientProfile() {
                               <div className="space-y-2">
                                 <div className="flex items-center space-x-2">
                                   <h4 className="font-semibold">
-                                    {appointment.doctor.name}
+                                    {appointment.doctorName}
                                   </h4>
                                   <span
                                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -718,25 +718,23 @@ export default function PatientProfile() {
                                         appointment.status.slice(1)}
                                   </span>
                                 </div>
-                                <p className="text-sm text-gray-600">
-                                  {appointment.doctor.specialty}
-                                </p>
+                               
                                 <div className="flex items-center space-x-4 text-sm text-gray-600">
                                   <div className="flex items-center">
                                     <FiCalendar className="mr-1 h-4 w-4" />
-                                    {formatDate(appointment.date)}
+                                    {appointment.appointmentDate.split('T')[0]}
                                   </div>
                                   <div className="flex items-center">
                                     <FiClock className="mr-1 h-4 w-4" />
-                                    {appointment.time}
+                                    {appointment.appointmentTime}
                                   </div>
                                 </div>
-                                {appointment.concern && (
+                                {appointment.reason && (
                                   <p className="text-sm text-gray-600">
                                     <span className="font-medium">
                                       Concern:
                                     </span>{" "}
-                                    {appointment.concern}
+                                    {appointment.reason}
                                   </p>
                                 )}
                               </div>

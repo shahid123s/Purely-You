@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ZegoUIKitPrebuilt } from '@zegocloud/zego-uikit-prebuilt';
+import { useNavigate } from 'react-router-dom';
 
 const VideoCall = () => {
   const containerRef = useRef(null);
@@ -14,6 +15,8 @@ const VideoCall = () => {
       return null;
     }
   });
+
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (!userDetails) return;
@@ -41,6 +44,9 @@ const VideoCall = () => {
       scenario: {
         mode: ZegoUIKitPrebuilt.VideoConference,
       },
+      onLeaveRoom: () => {
+        navigate('/doctor')
+      }
     });
   }, [userDetails]);
 
@@ -48,7 +54,10 @@ const VideoCall = () => {
     return <div>Error loading user details. Please check your login status.</div>;
   }
 
-  return <div ref={containerRef} style={{ width: '100%', height: '100vh' }}></div>;
+  return (
+  <>
+  <div ref={containerRef} style={{ width: '100%', height: '100vh' }}></div>;
+  </>)
 };
 
 export default VideoCall;

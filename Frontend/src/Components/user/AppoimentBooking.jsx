@@ -253,7 +253,7 @@ export default function AppointmentBookingModal({
         appointmentTime: bookingForm.time,
         reason: bookingForm.concern,
         notes: bookingForm.notes,
-        name:localStorage.getItem('patientName')
+        patientName:localStorage.getItem('patientName')
 
       });
 
