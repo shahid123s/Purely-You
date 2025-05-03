@@ -29,5 +29,14 @@ export const userServices = {
         } catch (error) {
             throw new CustomError("Error in getting appointments" + error.message, 500);
         }
+    }, 
+
+    bookAppointment: async (data) => {
+        try {
+            const appointment = await appointmentRepository.createAppointment(data);
+            return appointment;
+        } catch (error) {
+            throw new CustomError("Error in booking appointment" + error.message, 500);
+        }
     }
 }

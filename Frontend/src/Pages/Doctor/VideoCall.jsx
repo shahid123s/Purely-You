@@ -20,12 +20,13 @@ const VideoCall = () => {
 
     const appID = Number(import.meta.env.VITE_APPID);
     const serverSecret = import.meta.env.VITE_APP_SIGN;
-    
 
+    
+    console.log(userDetails.roomId, 'roomId')
     const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
       appID,
       serverSecret,
-      roomID,
+      userDetails.roomId,
       userDetails._id, // Use the ID from stored details
       userDetails.name // Use the name from stored details
     );
@@ -35,13 +36,13 @@ const VideoCall = () => {
       container: containerRef.current,
       sharedLinks: [{
         name: 'Copy Link',
-        url: `${window.location.origin}/video/${roomID}`,
+        url: `${window.location.origin}/video/${userDetails.roomId}`,
       }],
       scenario: {
         mode: ZegoUIKitPrebuilt.VideoConference,
       },
     });
-  }, [roomID, userDetails]);
+  }, [userDetails]);
 
   if (!userDetails) {
     return <div>Error loading user details. Please check your login status.</div>;

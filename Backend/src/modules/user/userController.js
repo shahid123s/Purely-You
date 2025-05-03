@@ -61,3 +61,22 @@ export const getAppointments = async (req, res, next) => {
         next(error)
     }
 }
+
+export const bookAppointment = async (req, res, next) => {
+    try {
+        const result = await userServices.bookAppointment(req.body);
+        if(!result) {
+            return res.status(404).json({
+                success: false,
+                message: "User Not Found",
+            })
+        }
+        return res.status(200).json({
+            success: true,
+            message: "User Found",
+            data: result
+        })
+    } catch (error) {
+        next(error)
+    }
+}
