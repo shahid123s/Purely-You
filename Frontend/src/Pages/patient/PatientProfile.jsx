@@ -1,42 +1,55 @@
 import { useState, useEffect } from "react";
-import { FiSearch, FiX, FiUser, FiCalendar, FiClock, FiEdit, FiTrash2 } from "react-icons/fi";
+import {
+  FiSearch,
+  FiX,
+  FiUser,
+  FiCalendar,
+  FiClock,
+  FiEdit,
+  FiTrash2,
+} from "react-icons/fi";
 import patientAxiosInstance from "../../utils/patientAxios";
 import { toast } from "sonner";
 import AppointmentBookingModal from "../../components/user/AppoimentBooking";
 
-const DoctorDropdown = ({ 
-  doctors, 
-  selectedDoctor, 
-  onSelect, 
+const DoctorDropdown = ({
+  doctors,
+  selectedDoctor,
+  onSelect,
   placeholder = "Select a dermatologist",
-  isLoading = false
+  isLoading = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
-  const filteredDoctors = doctors.filter(doctor =>
-    doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredDoctors = doctors.filter(
+    (doctor) =>
+      doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="relative">
-      <div 
-        className={`flex items-center justify-between px-3 py-2 border ${isLoading ? 'bg-gray-100' : 'bg-white'} border-gray-300 rounded-md shadow-sm cursor-pointer`}
+      <div
+        className={`flex items-center justify-between px-3 py-2 border ${
+          isLoading ? "bg-gray-100" : "bg-white"
+        } border-gray-300 rounded-md shadow-sm cursor-pointer`}
         onClick={() => !isLoading && setIsOpen(!isOpen)}
       >
         {selectedDoctor ? (
           <div className="flex items-center">
             {selectedDoctor.image && (
-              <img 
-                src={selectedDoctor.image} 
+              <img
+                src={selectedDoctor.image}
                 alt={selectedDoctor.name}
                 className="w-8 h-8 rounded-full mr-2 object-cover"
               />
             )}
             <div>
               <p className="text-sm font-medium">{selectedDoctor.name}</p>
-              <p className="text-xs text-gray-500">{selectedDoctor.specialty}</p>
+              <p className="text-xs text-gray-500">
+                {selectedDoctor.specialty}
+              </p>
             </div>
           </div>
         ) : isLoading ? (
@@ -46,7 +59,9 @@ const DoctorDropdown = ({
         )}
         {!isLoading && (
           <svg
-            className={`h-5 w-5 text-gray-400 transition-transform ${isOpen ? "transform rotate-180" : ""}`}
+            className={`h-5 w-5 text-gray-400 transition-transform ${
+              isOpen ? "transform rotate-180" : ""
+            }`}
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 20 20"
             fill="currentColor"
@@ -89,8 +104,8 @@ const DoctorDropdown = ({
               >
                 <div className="flex items-center">
                   {doctor.image ? (
-                    <img 
-                      src={doctor.image} 
+                    <img
+                      src={doctor.image}
                       alt={doctor.name}
                       className="w-8 h-8 rounded-full mr-2 object-cover"
                     />
@@ -119,7 +134,9 @@ const DoctorDropdown = ({
 
 const Calendar = ({ selectedDate, onDateChange, availableDates }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDay, setSelectedDay] = useState(selectedDate ? new Date(selectedDate) : null);
+  const [selectedDay, setSelectedDay] = useState(
+    selectedDate ? new Date(selectedDate) : null
+  );
 
   const daysInMonth = (month, year) => {
     return new Date(year, month + 1, 0).getDate();
@@ -131,8 +148,8 @@ const Calendar = ({ selectedDate, onDateChange, availableDates }) => {
 
   const isDateAvailable = (date) => {
     if (!availableDates || availableDates.length === 0) return false;
-    const dateStr = date.toISOString().split('T')[0];
-    return availableDates.some(d => d === dateStr);
+    const dateStr = date.toISOString().split("T")[0];
+    return availableDates.some((d) => d === dateStr);
   };
 
   const handleDateClick = (day) => {
@@ -141,10 +158,10 @@ const Calendar = ({ selectedDate, onDateChange, availableDates }) => {
       currentMonth.getMonth(),
       day
     );
-    
+
     if (isDateAvailable(newDate)) {
       setSelectedDay(newDate);
-      onDateChange(newDate.toISOString().split('T')[0]);
+      onDateChange(newDate.toISOString().split("T")[0]);
     }
   };
 
@@ -163,7 +180,7 @@ const Calendar = ({ selectedDate, onDateChange, availableDates }) => {
     const year = currentMonth.getFullYear();
     const daysCount = daysInMonth(month, year);
     const firstDay = firstDayOfMonth(month, year);
-    
+
     const days = [];
     let day = 1;
 
@@ -174,19 +191,24 @@ const Calendar = ({ selectedDate, onDateChange, availableDates }) => {
     for (; day <= daysCount; day++) {
       const currentDate = new Date(year, month, day);
       const isAvailable = isDateAvailable(currentDate);
-      const isSelected = selectedDay && 
-        selectedDay.getDate() === day && 
-        selectedDay.getMonth() === month && 
+      const isSelected =
+        selectedDay &&
+        selectedDay.getDate() === day &&
+        selectedDay.getMonth() === month &&
         selectedDay.getFullYear() === year;
 
       days.push(
         <button
           key={`day-${day}`}
           className={`w-10 h-10 rounded-full flex items-center justify-center text-sm
-            ${isSelected ? 'bg-cyan-600 text-white' : ''}
-            ${isAvailable ? 
-              (isSelected ? 'bg-cyan-600 text-white' : 'hover:bg-gray-100 cursor-pointer') : 
-              'text-gray-400 cursor-not-allowed'}
+            ${isSelected ? "bg-cyan-600 text-white" : ""}
+            ${
+              isAvailable
+                ? isSelected
+                  ? "bg-cyan-600 text-white"
+                  : "hover:bg-gray-100 cursor-pointer"
+                : "text-gray-400 cursor-not-allowed"
+            }
           `}
           onClick={() => isAvailable && handleDateClick(day)}
           disabled={!isAvailable}
@@ -202,34 +224,53 @@ const Calendar = ({ selectedDate, onDateChange, availableDates }) => {
   return (
     <div className="bg-white rounded-lg shadow p-4">
       <div className="flex justify-between items-center mb-4">
-        <button 
+        <button
           onClick={() => changeMonth(-1)}
           className="p-2 rounded-full hover:bg-gray-100"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+              clipRule="evenodd"
+            />
           </svg>
         </button>
         <h3 className="font-medium">
-          {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          {currentMonth.toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric",
+          })}
         </h3>
-        <button 
+        <button
           onClick={() => changeMonth(1)}
           className="p-2 rounded-full hover:bg-gray-100"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+              clipRule="evenodd"
+            />
           </svg>
         </button>
       </div>
       <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-500 mb-2">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
           <div key={day}>{day}</div>
         ))}
       </div>
-      <div className="grid grid-cols-7 gap-1">
-        {renderDays()}
-      </div>
+      <div className="grid grid-cols-7 gap-1">{renderDays()}</div>
     </div>
   );
 };
@@ -239,25 +280,26 @@ export default function PatientProfile() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
-  const [isMedicalRecordModalOpen, setIsMedicalRecordModalOpen] = useState(false);
+  const [isMedicalRecordModalOpen, setIsMedicalRecordModalOpen] =
+    useState(false);
   const [selectedMedicalRecord, setSelectedMedicalRecord] = useState("");
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [appointmentFilter, setAppointmentFilter] = useState("all");
-  
+
   // Change patient initial state to match API response
-const [patient, setPatient] = useState({
-  _id: "",
-  name: "",
-  email: "",
-  phone: "",
-  dob: "",
-  gender: "",
-  bloodGroup: "",
-  status: "",
-  createdAt: "",
-  updatedAt: ""
-});
-  
+  const [patient, setPatient] = useState({
+    _id: "",
+    name: "",
+    email: "",
+    phone: "",
+    dob: "",
+    gender: "",
+    bloodGroup: "",
+    status: "",
+    createdAt: "",
+    updatedAt: "",
+  });
+
   const [formData, setFormData] = useState({ ...patient });
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingAppointments, setIsLoadingAppointments] = useState(true);
@@ -281,7 +323,7 @@ const [patient, setPatient] = useState({
     const fetchPatientData = async () => {
       try {
         setIsLoading(true);
-        const response = await patientAxiosInstance.get('/profile');
+        const response = await patientAxiosInstance.get("/profile");
         const patientData = response.data.data; // Access the data property from the response
         setPatient({
           _id: patientData._id,
@@ -292,7 +334,7 @@ const [patient, setPatient] = useState({
           gender: patientData.gender,
           bloodGroup: patientData.bloodGroup,
           createdAt: patientData.createdAt,
-          updatedAt: patientData.updatedAt
+          updatedAt: patientData.updatedAt,
         });
         setFormData({
           _id: patientData._id,
@@ -301,11 +343,11 @@ const [patient, setPatient] = useState({
           phone: patientData.phone,
           dob: patientData.dob,
           gender: patientData.gender,
-          bloodGroup: patientData.bloodGroup
+          bloodGroup: patientData.bloodGroup,
         });
       } catch (error) {
-        toast.error('Failed to load patient profile');
-        console.error('Error fetching patient data:', error);
+        toast.error("Failed to load patient profile");
+        console.error("Error fetching patient data:", error);
       } finally {
         setIsLoading(false);
       }
@@ -319,11 +361,11 @@ const [patient, setPatient] = useState({
     const fetchAppointments = async () => {
       try {
         setIsLoadingAppointments(true);
-        const response = await patientAxiosInstance.get('/get-appoinments');
+        const response = await patientAxiosInstance.get("/get-appoinments");
         setAppointments(response.data.data);
       } catch (error) {
-        toast.error('Failed to load appointments');
-        console.error('Error fetching appointments:', error);
+        toast.error("Failed to load appointments");
+        console.error("Error fetching appointments:", error);
       } finally {
         setIsLoadingAppointments(false);
       }
@@ -336,17 +378,19 @@ const [patient, setPatient] = useState({
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const response = await patientAxiosInstance.get('/doctors');
+        const response = await patientAxiosInstance.get("/doctors");
         // Ensure we're getting an array and set it
-        const doctorsData = Array.isArray(response.data?.data) ? response.data.data : [];
+        const doctorsData = Array.isArray(response.data?.data)
+          ? response.data.data
+          : [];
         setDoctors(doctorsData);
       } catch (error) {
-        toast.error('Failed to load dermatologists');
-        console.error('Error fetching doctors:', error);
+        toast.error("Failed to load dermatologists");
+        console.error("Error fetching doctors:", error);
         setDoctors([]); // Reset to empty array on error
       }
     };
-  
+
     fetchDoctors();
   }, []);
 
@@ -360,8 +404,8 @@ const [patient, setPatient] = useState({
           );
           setAvailableDates(response.data);
         } catch (error) {
-          toast.error('Failed to load available dates');
-          console.error('Error fetching reschedule dates:', error);
+          toast.error("Failed to load available dates");
+          console.error("Error fetching reschedule dates:", error);
         }
       }
     };
@@ -380,8 +424,8 @@ const [patient, setPatient] = useState({
           );
           setAvailableTimes(response.data);
         } catch (error) {
-          toast.error('Failed to load available times');
-          console.error('Error fetching reschedule times:', error);
+          toast.error("Failed to load available times");
+          console.error("Error fetching reschedule times:", error);
         }
       }
     };
@@ -392,13 +436,17 @@ const [patient, setPatient] = useState({
   const cancelAppointment = async (id) => {
     try {
       await patientAxiosInstance.patch(`/appointments/${id}/cancel`);
-      setAppointments(appointments.map(apt => 
-        apt._id === id ? { ...apt, status: "cancelled" } : apt
-      ));
-      toast.success('Appointment cancelled successfully');
+      setAppointments(
+        appointments.map((apt) =>
+          apt._id === id ? { ...apt, status: "cancelled" } : apt
+        )
+      );
+      toast.success("Appointment cancelled successfully");
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to cancel appointment');
-      console.error('Error cancelling appointment:', error);
+      toast.error(
+        error.response?.data?.message || "Failed to cancel appointment"
+      );
+      console.error("Error cancelling appointment:", error);
     }
   };
 
@@ -419,10 +467,10 @@ const [patient, setPatient] = useState({
   const openRescheduleModal = (appointment) => {
     setSelectedAppointment(appointment);
     setIsRescheduleModalOpen(true);
-    setRescheduleForm({ 
-      date: "", 
-      time: "", 
-      reason: "" 
+    setRescheduleForm({
+      date: "",
+      time: "",
+      reason: "",
     });
     setShowRescheduleCalendar(false);
   };
@@ -430,59 +478,64 @@ const [patient, setPatient] = useState({
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await patientAxiosInstance.put('/profile', {
+      const response = await patientAxiosInstance.put("/profile", {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
         dob: formData.dob,
         gender: formData.gender,
-        bloodGroup: formData.bloodGroup
+        bloodGroup: formData.bloodGroup,
       });
 
       setPatient(response.data.data);
       setIsEditModalOpen(false);
-      toast.success('Profile updated successfully');
+      toast.success("Profile updated successfully");
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update profile');
-      console.error('Error updating profile:', error);
+      toast.error(error.response?.data?.message || "Failed to update profile");
+      console.error("Error updating profile:", error);
     }
   };
 
   const handleRescheduleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setPendingReschedules(prev => ({
+    setPendingReschedules((prev) => ({
       ...prev,
       [selectedAppointment._id]: true,
     }));
 
     try {
-      await patientAxiosInstance.patch(`/appointments/${selectedAppointment._id}/reschedule`, {
-        date: rescheduleForm.date,
-        time: rescheduleForm.time,
-        reason: rescheduleForm.reason
-      });
+      await patientAxiosInstance.patch(
+        `/appointments/${selectedAppointment._id}/reschedule`,
+        {
+          date: rescheduleForm.date,
+          time: rescheduleForm.time,
+          reason: rescheduleForm.reason,
+        }
+      );
 
-      const updatedAppointments = appointments.map(apt =>
+      const updatedAppointments = appointments.map((apt) =>
         apt._id === selectedAppointment._id
-          ? { 
-              ...apt, 
+          ? {
+              ...apt,
               date: rescheduleForm.date,
               time: rescheduleForm.time,
-              status: "upcoming" 
+              status: "upcoming",
             }
           : apt
       );
 
       setAppointments(updatedAppointments);
       setIsRescheduleModalOpen(false);
-      toast.success('Appointment rescheduled successfully');
+      toast.success("Appointment rescheduled successfully");
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to reschedule appointment');
-      console.error('Error rescheduling appointment:', error);
+      toast.error(
+        error.response?.data?.message || "Failed to reschedule appointment"
+      );
+      console.error("Error rescheduling appointment:", error);
     } finally {
       setIsSubmitting(false);
-      setPendingReschedules(prev => ({
+      setPendingReschedules((prev) => ({
         ...prev,
         [selectedAppointment._id]: false,
       }));
@@ -491,21 +544,26 @@ const [patient, setPatient] = useState({
 
   const handleRescheduleChange = (e) => {
     const { name, value } = e.target;
-    setRescheduleForm(prev => ({ ...prev, [name]: value }));
+    setRescheduleForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleBookingSuccess = (newAppointment) => {
     setAppointments([...appointments, newAppointment]);
   };
 
-  const filteredAppointments = appointments.filter(apt => {
+  const filteredAppointments = appointments.filter((apt) => {
     if (appointmentFilter === "all") return true;
     return apt.status === appointmentFilter;
   });
 
   const formatDate = (dateString) => {
-    const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('en-US', options);
+    const options = {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    };
+    return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
   return (
@@ -527,30 +585,54 @@ const [patient, setPatient] = useState({
                         <FiUser className="text-gray-500 h-12 w-12" />
                       </div>
                     </div>
-                    <h2 className="text-xl font-bold text-center mt-4">{patient.name}</h2>
-                    <p className="text-sm text-gray-500 text-center">Patient ID: {patient._id}</p>
+                    <h2 className="text-xl font-bold text-center mt-4">
+                      {patient.name}
+                    </h2>
+                    <p className="text-sm text-gray-500 text-center">
+                      Patient ID: {patient._id}
+                    </p>
                   </div>
                   <div className="p-6">
                     <div className="space-y-4">
                       <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700">Email</label>
-                        <div className="text-sm text-gray-600">{patient.email}</div>
+                        <label className="text-sm font-medium text-gray-700">
+                          Email
+                        </label>
+                        <div className="text-sm text-gray-600">
+                          {patient.email}
+                        </div>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700">Phone</label>
-                        <div className="text-sm text-gray-600">{patient.phone}</div>
+                        <label className="text-sm font-medium text-gray-700">
+                          Phone
+                        </label>
+                        <div className="text-sm text-gray-600">
+                          {patient.phone}
+                        </div>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700">Date of Birth</label>
-                        <div className="text-sm text-gray-600">{patient.dob}</div>
+                        <label className="text-sm font-medium text-gray-700">
+                          Date of Birth
+                        </label>
+                        <div className="text-sm text-gray-600">
+                          {patient.dob}
+                        </div>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700">Gender</label>
-                        <div className="text-sm text-gray-600">{patient.gender}</div>
+                        <label className="text-sm font-medium text-gray-700">
+                          Gender
+                        </label>
+                        <div className="text-sm text-gray-600">
+                          {patient.gender}
+                        </div>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700">Blood Group</label>
-                        <div className="text-sm text-gray-600">{patient.bloodGroup}</div>
+                        <label className="text-sm font-medium text-gray-700">
+                          Blood Group
+                        </label>
+                        <div className="text-sm text-gray-600">
+                          {patient.bloodGroup}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -605,14 +687,18 @@ const [patient, setPatient] = useState({
                         <div
                           key={appointment._id}
                           className={`bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden ${
-                            appointment.status === "cancelled" ? "opacity-60" : ""
+                            appointment.status === "cancelled"
+                              ? "opacity-60"
+                              : ""
                           }`}
                         >
                           <div className="p-6">
                             <div className="flex flex-col md:flex-row justify-between">
                               <div className="space-y-2">
                                 <div className="flex items-center space-x-2">
-                                  <h4 className="font-semibold">{appointment.doctor.name}</h4>
+                                  <h4 className="font-semibold">
+                                    {appointment.doctor.name}
+                                  </h4>
                                   <span
                                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                       pendingReschedules[appointment._id]
@@ -626,11 +712,15 @@ const [patient, setPatient] = useState({
                                   >
                                     {pendingReschedules[appointment._id]
                                       ? "Pending Reschedule"
-                                      : appointment.status.charAt(0).toUpperCase() +
+                                      : appointment.status
+                                          .charAt(0)
+                                          .toUpperCase() +
                                         appointment.status.slice(1)}
                                   </span>
                                 </div>
-                                <p className="text-sm text-gray-600">{appointment.doctor.specialty}</p>
+                                <p className="text-sm text-gray-600">
+                                  {appointment.doctor.specialty}
+                                </p>
                                 <div className="flex items-center space-x-4 text-sm text-gray-600">
                                   <div className="flex items-center">
                                     <FiCalendar className="mr-1 h-4 w-4" />
@@ -643,7 +733,10 @@ const [patient, setPatient] = useState({
                                 </div>
                                 {appointment.concern && (
                                   <p className="text-sm text-gray-600">
-                                    <span className="font-medium">Concern:</span> {appointment.concern}
+                                    <span className="font-medium">
+                                      Concern:
+                                    </span>{" "}
+                                    {appointment.concern}
                                   </p>
                                 )}
                               </div>
@@ -652,8 +745,12 @@ const [patient, setPatient] = useState({
                                 {appointment.status === "upcoming" && (
                                   <>
                                     <button
-                                      onClick={() => openRescheduleModal(appointment)}
-                                      disabled={pendingReschedules[appointment._id]}
+                                      onClick={() =>
+                                        openRescheduleModal(appointment)
+                                      }
+                                      disabled={
+                                        pendingReschedules[appointment._id]
+                                      }
                                       className={`px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 ${
                                         pendingReschedules[appointment._id]
                                           ? "opacity-50 cursor-not-allowed"
@@ -670,21 +767,30 @@ const [patient, setPatient] = useState({
                                           ? "opacity-50 cursor-not-allowed"
                                           : ""
                                       }`}
-                                      onClick={() => cancelAppointment(appointment._id)}
-                                      disabled={pendingReschedules[appointment._id]}
+                                      onClick={() =>
+                                        cancelAppointment(appointment._id)
+                                      }
+                                      disabled={
+                                        pendingReschedules[appointment._id]
+                                      }
                                     >
                                       Cancel
                                     </button>
                                   </>
                                 )}
-                                {appointment.status === "completed" && appointment.medicalRecord && (
-                                  <button
-                                    className="px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
-                                    onClick={() => viewMedicalRecord(appointment.medicalRecord)}
-                                  >
-                                    View Details
-                                  </button>
-                                )}
+                                {appointment.status === "completed" &&
+                                  appointment.medicalRecord && (
+                                    <button
+                                      className="px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
+                                      onClick={() =>
+                                        viewMedicalRecord(
+                                          appointment.medicalRecord
+                                        )
+                                      }
+                                    >
+                                      View Details
+                                    </button>
+                                  )}
                               </div>
                             </div>
                           </div>
@@ -693,7 +799,9 @@ const [patient, setPatient] = useState({
                     ) : (
                       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                         <div className="p-6 text-center">
-                          <p className="text-gray-500">No appointments found.</p>
+                          <p className="text-gray-500">
+                            No appointments found.
+                          </p>
                         </div>
                       </div>
                     )}
@@ -853,7 +961,10 @@ const [patient, setPatient] = useState({
       <AppointmentBookingModal
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
-        onBookingSuccess={handleBookingSuccess}
+        onBookingSuccess={(newAppointment) => {
+          setAppointments([...appointments, newAppointment]);
+          setIsBookingModalOpen(false); // Close the modal after successful booking
+        }}
       />
 
       {/* Reschedule Appointment Modal */}
@@ -884,14 +995,22 @@ const [patient, setPatient] = useState({
                 <input
                   type="text"
                   name="date"
-                  value={rescheduleForm.date ? 
-                    new Date(rescheduleForm.date).toLocaleDateString('en-US', { 
-                      weekday: 'short', 
-                      month: 'short', 
-                      day: 'numeric', 
-                      year: 'numeric' 
-                    }) : ''}
-                  onClick={() => setShowRescheduleCalendar(!showRescheduleCalendar)}
+                  value={
+                    rescheduleForm.date
+                      ? new Date(rescheduleForm.date).toLocaleDateString(
+                          "en-US",
+                          {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          }
+                        )
+                      : ""
+                  }
+                  onClick={() =>
+                    setShowRescheduleCalendar(!showRescheduleCalendar)
+                  }
                   readOnly
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 cursor-pointer"
                   placeholder="Select a date"
@@ -902,7 +1021,11 @@ const [patient, setPatient] = useState({
                     <Calendar
                       selectedDate={rescheduleForm.date}
                       onDateChange={(date) => {
-                        setRescheduleForm(prev => ({ ...prev, date, time: "" }));
+                        setRescheduleForm((prev) => ({
+                          ...prev,
+                          date,
+                          time: "",
+                        }));
                         setShowRescheduleCalendar(false);
                       }}
                       availableDates={availableDates}
