@@ -24,6 +24,7 @@ export const doctorController = {
     getAppoinments: async (req, res, next) => {
         try {
             const doctorId = req.doctor;
+            console.log(doctorId, 'doctorId in doctorController');
             const result = await doctorService.getAppoinments(doctorId);
             if(!result) {
                 return res.status(404).json({

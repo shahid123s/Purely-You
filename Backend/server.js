@@ -9,9 +9,10 @@ import errorHandler from './src/middleware/errorHandler.js';
 import patientRoute from './src/modules/user/userRoute.js';
 import aiRoute from './src/modules/aiAnalys/aiRouter.js'
 import morgan from 'morgan';
-import { autheticateUser } from './src/middleware/userAuthMiddleware.js';
+import { autheticateDoctor, autheticateUser } from './src/middleware/userAuthMiddleware.js';
 import { patient, doctor, admin } from './src/modules/auth/authRoute.js';
 import adminRoute from './src/modules/admin/adminRoute.js'
+import doctorRoute from './src/modules/doctor/doctorRoute.js'
 const {port} = appConfig.app
 
 
@@ -33,6 +34,7 @@ app.use('/api/doctor/auth', doctor);
 app.use('/api/admin/auth', admin);
 app.use('/api/admin', adminRoute)
 app.use('/api/patient',autheticateUser, patientRoute)
+app.use('/api/doctor',autheticateDoctor, doctorRoute)
 app.use(errorHandler)
 console.log('here')
 

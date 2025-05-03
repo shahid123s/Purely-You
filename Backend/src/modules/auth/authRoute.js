@@ -12,6 +12,7 @@ patient.post('/refresh-token', authController.userRefreshToken);
 // Doctor Authentication Routes
 doctor.post('/login',authController.doctorLogin);
 doctor.post('/register', authController.doctorRegister);
+doctor.post('/refresh', authController.doctorRefreshToken);
 
 
 // Admin Authentication Routes

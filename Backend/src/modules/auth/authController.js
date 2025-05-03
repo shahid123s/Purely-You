@@ -152,6 +152,7 @@ export const authController = {
             const {accessToken, refreshToken, doctor} = await authServices.doctorAuthServices.doctorLogin(email, password);
 
 
+
             res.cookie('doctorRefreshToken', refreshToken, {
                 httpOnly: true,
                 secure: false,
@@ -198,6 +199,12 @@ export const authController = {
                         message: 'Unauthorised',
                     })
             }
+            res.cookie('doctorAccessToken', result, {
+                httpOnly: true,
+                secure: false,
+                sameSite: 'Lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+            });
             return res
                 .status(200)
                 .json({

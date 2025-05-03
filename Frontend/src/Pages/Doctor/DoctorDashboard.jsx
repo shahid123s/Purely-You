@@ -1,440 +1,532 @@
 import { useEffect, useState } from "react";
-import { Check } from 'lucide-react';
-import image from '../../assets/doctor1.jpg';
+import { Check, Clock, Calendar, User, Search, Copy, Video, FileText } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import doctorAxiosInstance from "../../utils/doctorAxiosInstance";
+import { toast } from 'sonner';
 
 export default function DoctorDashboard() {
   const [activeTab, setActiveTab] = useState("today");
   const [isMedicalRecordModalOpen, setIsMedicalRecordModalOpen] = useState(false);
-  const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [medicalRecord, setMedicalRecord] = useState("");
-  const navigate = useNavigate()
-  const [appointments, setAppointments] = useState([
-]);
+  const [appointments, setAppointments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
 
-useEffect(() => {
-  const fetchAppointments = async () => {
-    try {
-      const response = await doctorAxiosInstance.get('/appointments')
-      if (!response.ok) {
-        throw new Error('Failed to fetch appointments');
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        setIsLoading(true);
+        const response = await doctorAxiosInstance.get('/appointments');
+        setAppointments(response.data.data);
+      } catch (error) {
+        console.error('Error fetching appointments:', error);
+        toast.error('Failed to load appointments');
+      } finally {
+        setIsLoading(false);
       }
-      const data = await response.json();
-      setAppointments(data);
+    };
+    fetchAppointments();
+  }, []);
+
+  // Date helpers
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  const isToday = (dateString) => {
+    const today = new Date().toISOString().split('T')[0];
+    const appointmentDate = new Date(dateString).toISOString().split('T')[0];
+    return today === appointmentDate;
+  };
+
+  const isUpcoming = (dateString) => {
+    const today = new Date();
+    const appointmentDate = new Date(dateString);
+    return appointmentDate > today && !isToday(dateString);
+  };
+
+  // Appointment actions
+  const generateMeetingLink = (appointmentId) => {
+    const meetingLink = `${window.location.origin}/doctor/call/${appointmentId}`;
+    navigator.clipboard.writeText(meetingLink);
+    toast.success('Meeting link copied to clipboard!');
+  };
+
+  const acceptAppointment = async (appointmentId) => {
+    try {
+      await doctorAxiosInstance.put(`/appointments/${appointmentId}`, {
+        status: "scheduled"
+      });
+      
+      setAppointments(appointments.map(apt => 
+        apt._id === appointmentId ? { ...apt, status: "scheduled" } : apt
+      ));
+      
+      toast.success('Appointment accepted successfully');
     } catch (error) {
-      console.error('Error fetching appointments:', error);
+      console.error('Error accepting appointment:', error);
+      toast.error('Failed to accept appointment');
     }
   };
 
-  fetchAppointments();
-
-})
-
-
-
-  const completeAppointment = (id) => {
-    navigate('/doctor/call');
-
-    // setSelectedAppointmentId(id);
-    // setMedicalRecord("");
-    // setIsMedicalRecordModalOpen(true);
+  const rejectAppointment = async (appointmentId) => {
+    try {
+      await doctorAxiosInstance.put(`/appointments/${appointmentId}`, {
+        status: "rejected"
+      });
+      
+      setAppointments(appointments.map(apt => 
+        apt._id === appointmentId ? { ...apt, status: "rejected" } : apt
+      ));
+      
+      toast.success('Appointment rejected');
+    } catch (error) {
+      console.error('Error rejecting appointment:', error);
+      toast.error('Failed to reject appointment');
+    }
   };
 
-  const handleMedicalRecordSubmit = (e) => {
+  const startVideoCall = (appointmentId) => {
+    navigate(`/doctor/call/${appointmentId}`);
+  };
+
+  const handleMedicalRecordSubmit = async (e) => {
     e.preventDefault();
-    // Simulate backend API call
-    setAppointments(
-      appointments.map((apt) =>
-        apt.id === selectedAppointmentId
-          ? { ...apt, status: "completed", medicalRecord }
-          : apt
-      )
-    );
-    setIsMedicalRecordModalOpen(false);
-    setSelectedAppointmentId(null);
-    setMedicalRecord("");
+    try {
+      await doctorAxiosInstance.put(`/appointments/${selectedAppointment._id}`, {
+        notes: medicalRecord,
+        status: "completed"
+      });
+      
+      setAppointments(appointments.map(apt => 
+        apt._id === selectedAppointment._id ? 
+        { ...apt, status: "completed", notes: medicalRecord } : apt
+      ));
+      
+      toast.success('Appointment completed successfully');
+      setIsMedicalRecordModalOpen(false);
+      setMedicalRecord("");
+      setSelectedAppointment(null);
+    } catch (error) {
+      console.error('Error updating appointment:', error);
+      toast.error('Failed to complete appointment');
+    }
   };
 
-  const markNoShow = (id) => {
-    setAppointments(
-      appointments.map((apt) =>
-        apt.id === id ? { ...apt, status: "no-show" } : apt
-      )
-    );
+  const markNoShow = async (appointmentId) => {
+    try {
+      await doctorAxiosInstance.put(`/appointments/${appointmentId}`, { 
+        status: "no-show" 
+      });
+      
+      setAppointments(appointments.map(apt => 
+        apt._id === appointmentId ? { ...apt, status: "no-show" } : apt
+      ));
+      
+      toast.success('Marked as no-show');
+    } catch (error) {
+      console.error('Error marking no-show:', error);
+      toast.error('Failed to update appointment status');
+    }
   };
 
-  const todaysAppointments = appointments.filter(
-    (apt) => apt.date === "March 26, 2025" && apt.status === "scheduled"
-  );
-  const pastAppointments = appointments.filter(
-    (apt) => apt.status === "completed" || apt.status === "no-show"
-  );
+  // Filter appointments
+  const filteredAppointments = appointments.filter(apt => {
+    const matchesSearch = apt.patientName.toLowerCase().includes(searchTerm.toLowerCase());
+    const appointmentDate = new Date(apt.appointmentDate);
+    const today = new Date();
+    
+    if (activeTab === "today") {
+      return isToday(apt.appointmentDate) && apt.status === "scheduled" && matchesSearch;
+    }
+    
+    if (activeTab === "upcoming") {
+      return (isUpcoming(apt.appointmentDate) && ["pending", "scheduled"].includes(apt.status) && matchesSearch);
+    }
+    
+    if (activeTab === "past") {
+      return ["completed", "no-show", "rejected"].includes(apt.status) && matchesSearch;
+    }
+    
+    return matchesSearch;
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
+      </div>
+    );
+  }
 
   return (
-    <main>
+    <main className="bg-gray-50 min-h-screen">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Dashboard header section */}
+        {/* Dashboard Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Doctor Dashboard</h1>
             <p className="text-gray-600">Manage your appointments and patient records</p>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="relative h-10 w-10 rounded-full overflow-hidden">
-              <img
-                src ={image}
-                alt="Dr. James Roberts"
-                className="object-cover w-full h-full"
-              />
+            <div className="relative h-10 w-10 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+              <User className="text-gray-600" />
             </div>
             <div>
-              <p className="font-medium">Dr. James Roberts</p>
+              <p className="font-medium">Dr. {appointments[0]?.doctorName || 'User'}</p>
               <p className="text-sm text-gray-600">Dermatologist</p>
             </div>
           </div>
         </div>
 
-        {/* Stats cards */}
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">Today's Appointments</p>
-                <p className="text-2xl font-bold">{todaysAppointments.length}</p>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                {/* Calendar icon */}
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">Completed</p>
-                <p className="text-2xl font-bold">
-                  {appointments.filter((apt) => apt.status === "completed").length}
-                </p>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                {/* Check icon */}
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">No-Shows</p>
-                <p className="text-2xl font-bold">
-                  {appointments.filter((apt) => apt.status === "no-show").length}
-                </p>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center text-red-600">
-                {/* X icon */}
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">Total Patients</p>
-                <p className="text-2xl font-bold">124</p>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
-                {/* Users icon */}
-              </div>
-            </div>
-          </div>
+          <StatCard 
+            title="Today's Appointments"
+            value={appointments.filter(apt => isToday(apt.appointmentDate) && apt.status === "scheduled").length}
+            icon={<Calendar className="h-5 w-5" />}
+            color="blue"
+          />
+          <StatCard 
+            title="Pending Approvals"
+            value={appointments.filter(apt => apt.status === "pending").length}
+            icon={<Clock className="h-5 w-5" />}
+            color="yellow"
+          />
+          <StatCard 
+            title="Completed"
+            value={appointments.filter(apt => apt.status === "completed").length}
+            icon={<Check className="h-5 w-5" />}
+            color="green"
+          />
+          <StatCard 
+            title="Total Patients"
+            value={new Set(appointments.map(apt => apt.patientId)).size}
+            icon={<User className="h-5 w-5" />}
+            color="purple"
+          />
         </div>
 
-        {/* Appointments section */}
+        {/* Appointments Section */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="border-b border-gray-200">
             <div className="grid grid-cols-3">
-              <button
-                className={`py-4 text-center text-sm font-medium ${
-                  activeTab === "today"
-                    ? "text-cyan-600 border-b-2 border-cyan-500"
-                    : "text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+              <TabButton 
+                active={activeTab === "today"}
                 onClick={() => setActiveTab("today")}
               >
                 Today's Schedule
-              </button>
-              <button
-                className={`py-4 text-center text-sm font-medium ${
-                  activeTab === "upcoming"
-                    ? "text-cyan-600 border-b-2 border-cyan-500"
-                    : "text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+              </TabButton>
+              <TabButton 
+                active={activeTab === "upcoming"}
                 onClick={() => setActiveTab("upcoming")}
               >
                 Upcoming
-              </button>
-              <button
-                className={`py-4 text-center text-sm font-medium ${
-                  activeTab === "past"
-                    ? "text-cyan-600 border-b-2 border-cyan-500"
-                    : "text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+              </TabButton>
+              <TabButton 
+                active={activeTab === "past"}
                 onClick={() => setActiveTab("past")}
               >
                 Past Appointments
-              </button>
+              </TabButton>
             </div>
           </div>
 
           <div className="p-6">
-            {activeTab === "today" && (
-              <>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold">Today's Appointments</h2>
-                  <div className="flex items-center space-x-2">
-                    <div className="relative">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500"
-                      >
-                        <circle cx="11" cy="11" r="8" />
-                        <path d="m21 21-4.3-4.3" />
-                      </svg>
-                      <input
-                        type="search"
-                        placeholder="Search patients..."
-                        className="pl-8 w-[250px] px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
-                      />
-                    </div>
-                    <div className="relative">
-                      <select className="w-[180px] px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 appearance-none bg-white">
-                        <option value="all">All Appointments</option>
-                        <option value="scheduled">Scheduled</option>
-                        <option value="completed">Completed</option>
-                        <option value="no-show">No-Show</option>
-                      </select>
-                    </div>
-                  </div>
+            {/* Search and Filter */}
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold">
+                {activeTab === "today" ? "Today's Appointments" : 
+                 activeTab === "upcoming" ? "Upcoming Appointments" : "Past Appointments"}
+              </h2>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-gray-400" />
                 </div>
-
-                <div className="space-y-4">
-                  {todaysAppointments.length > 0 ? (
-                    todaysAppointments.map((appointment) => (
-                      <div
-                        key={appointment.id}
-                        className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden"
-                      >
-                        <div className="p-6">
-                          <div className="flex flex-col md:flex-row justify-between">
-                            <div className="flex items-start space-x-4">
-                              <div className="relative h-12 w-12 rounded-full overflow-hidden">
-                                <img
-                                  src={appointment.patientImage || "/placeholder.svg"}
-                                  alt={appointment.patientName}
-                                  className="object-cover w-full h-full"
-                                />
-                              </div>
-                              <div>
-                                <div className="flex items-center space-x-2">
-                                  <h4 className="font-semibold">{appointment.patientName}</h4>
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    {appointment.patientId}
-                                  </span>
-                                </div>
-                                <p className="text-sm text-gray-600">{appointment.reason}</p>
-                                <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                                  <div className="flex items-center">{appointment.time}</div>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="mt-4 md:mt-0 flex items-center space-x-2">
-                              <button className="flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
-                                View Records
-                              </button>
-                              <button
-                                className="flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                                onClick={() => completeAppointment(appointment.id)}
-                              >
-                                <Check />
-                                Attend
-                              </button>
-                              <button
-                                className="flex items-center px-3 py-1.5 border border-red-200 text-sm font-medium rounded text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                onClick={() => markNoShow(appointment.id)}
-                              >
-                                No-Show
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-                      <div className="p-6 text-center">
-                        <p className="text-gray-500">No appointments scheduled for today.</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
-            {activeTab === "upcoming" && (
-              <div className="bg-white rounded-lg overflow-hidden">
-                <div className="p-6">
-                  <h3 className="text-lg font-medium text-gray-900">Upcoming Appointments</h3>
-                  <p className="mt-1 text-sm text-gray-500">View and manage your upcoming appointments</p>
-                </div>
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No upcoming appointments scheduled.</p>
-                </div>
+                <input
+                  type="search"
+                  placeholder="Search patients..."
+                  className="pl-10 w-[250px] px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
-            )}
+            </div>
 
-            {activeTab === "past" && (
-              <>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold">Past Appointments</h2>
-                  <div className="flex items-center space-x-2">{/* Search input */}</div>
-                </div>
-
-                <div className="space-y-4">
-                  {pastAppointments.length > 0 ? (
-                    pastAppointments.map((appointment) => (
-                      <div
-                        key={appointment.id}
-                        className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden"
-                      >
-                        <div className="p-6">
-                          <div className="flex flex-col md:flex-row justify-between">
-                            <div className="flex items-start space-x-4">
-                              <div className="relative h-12 w-12 rounded-full overflow-hidden">
-                                <img
-                                  src={appointment.patientImage || "/placeholder.svg"}
-                                  alt={appointment.patientName}
-                                  className="object-cover w-full h-full"
-                                />
-                              </div>
-                              <div>
-                                <div className="flex items-center space-x-2">
-                                  <h4 className="font-semibold">{appointment.patientName}</h4>
-                                  <span
-                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    ${
-                                      appointment.status === "completed"
-                                        ? "bg-green-100 text-green-800"
-                                        : "bg-red-100 text-red-800"
-                                    }`}
-                                  >
-                                    {appointment.status === "completed" ? "Completed" : "No-Show"}
-                                  </span>
-                                </div>
-                                <p className="text-sm text-gray-600">{appointment.reason}</p>
-                                <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                                  <div className="flex items-center">{appointment.date}</div>
-                                  <div className="flex items-center">{appointment.time}</div>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="mt-4 md:mt-0 flex items-center space-x-2">
-                              <button className="flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500">
-                                View Records
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-                      <div className="p-6 text-center">
-                        <p className="text-gray-500">No past appointments found.</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </>
+            {/* Appointments List */}
+            {filteredAppointments.length > 0 ? (
+              <div className="space-y-4">
+                {filteredAppointments.map(appointment => (
+                  <AppointmentCard 
+                    key={appointment._id}
+                    appointment={appointment}
+                    onComplete={() => setSelectedAppointment(appointment)}
+                    onStartCall={startVideoCall}
+                    onNoShow={markNoShow}
+                    onCopyLink={generateMeetingLink}
+                    onAccept={acceptAppointment}
+                    onReject={rejectAppointment}
+                    activeTab={activeTab}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState message={
+                searchTerm ? 
+                "No appointments match your search" : 
+                activeTab === "today" ? 
+                "No appointments scheduled for today" : 
+                activeTab === "upcoming" ?
+                "No upcoming appointments" :
+                "No past appointments found"
+              } />
             )}
           </div>
         </div>
       </div>
 
       {/* Medical Record Modal */}
-      {isMedicalRecordModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-          onClick={() => setIsMedicalRecordModalOpen(false)}
-        >
-          <div
-            className="bg-white rounded-lg p-6 w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Enter Medical Record</h2>
-              <button
-                onClick={() => setIsMedicalRecordModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleMedicalRecordSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Medical Record Notes
-                </label>
-                <textarea
-                  value={medicalRecord}
-                  onChange={(e) => setMedicalRecord(e.target.value)}
-                  rows="5"
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
-                  placeholder="Enter medical notes for this appointment..."
-                  required
-                />
-              </div>
-
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setIsMedicalRecordModalOpen(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
-                >
-                  Submit
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <MedicalRecordModal
+        isOpen={isMedicalRecordModalOpen}
+        onClose={() => {
+          setIsMedicalRecordModalOpen(false);
+          setSelectedAppointment(null);
+          setMedicalRecord("");
+        }}
+        onSubmit={handleMedicalRecordSubmit}
+        medicalRecord={medicalRecord}
+        setMedicalRecord={setMedicalRecord}
+        patientName={selectedAppointment?.patientName}
+      />
     </main>
   );
 }
+
+// Sub-components
+const StatCard = ({ title, value, icon, color }) => {
+  const colorClasses = {
+    blue: { bg: 'bg-blue-100', text: 'text-blue-600' },
+    green: { bg: 'bg-green-100', text: 'text-green-600' },
+    red: { bg: 'bg-red-100', text: 'text-red-600' },
+    purple: { bg: 'bg-purple-100', text: 'text-purple-600' },
+    yellow: { bg: 'bg-yellow-100', text: 'text-yellow-600' }
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-gray-500">{title}</p>
+          <p className="text-2xl font-bold">{value}</p>
+        </div>
+        <div className={`h-12 w-12 rounded-full ${colorClasses[color].bg} flex items-center justify-center ${colorClasses[color].text}`}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const TabButton = ({ children, active, onClick }) => (
+  <button
+    className={`py-4 text-center text-sm font-medium ${
+      active ? "text-cyan-600 border-b-2 border-cyan-500" : "text-gray-500 hover:text-gray-700"
+    }`}
+    onClick={onClick}
+  >
+    {children}
+  </button>
+);
+
+const AppointmentCard = ({ 
+  appointment, 
+  onComplete, 
+  onStartCall, 
+  onNoShow, 
+  onCopyLink,
+  onAccept,
+  onReject,
+  activeTab 
+}) => {
+  const isPending = appointment.status === "pending";
+  const isTodayAppointment = activeTab === "today";
+  const isUpcomingAppointment = activeTab === "upcoming";
+  const isPastAppointment = activeTab === "past";
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+      <div className="p-6">
+        <div className="flex flex-col md:flex-row justify-between">
+          <div className="flex items-start space-x-4">
+            <div className="relative h-12 w-12 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+              <User className="text-gray-600" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h4 className="font-semibold">{appointment.patientName}</h4>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  appointment.status === "pending" ? "bg-yellow-100 text-yellow-800" :
+                  appointment.status === "scheduled" ? "bg-blue-100 text-blue-800" :
+                  appointment.status === "completed" ? "bg-green-100 text-green-800" :
+                  appointment.status === "no-show" ? "bg-red-100 text-red-800" :
+                  "bg-gray-100 text-gray-800"
+                }`}>
+                  {appointment.status}
+                </span>
+              </div>
+              <p className="text-sm text-gray-600">{appointment.reason}</p>
+              <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                <div className="flex items-center">
+                  {new Date(appointment.appointmentDate).toLocaleDateString()}
+                </div>
+                <div className="flex items-center">
+                  {appointment.appointmentTime}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 md:mt-0 flex items-center space-x-2">
+            {isUpcomingAppointment && isPending && (
+              <>
+                <button
+                  className="flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  onClick={() => onAccept(appointment._id)}
+                >
+                  <Check className="mr-1 h-4 w-4" />
+                  Accept
+                </button>
+                <button
+                  className="flex items-center px-3 py-1.5 border border-red-200 text-sm font-medium rounded text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  onClick={() => onReject(appointment._id)}
+                >
+                  Reject
+                </button>
+              </>
+            )}
+
+            {isTodayAppointment && (
+              <>
+                <button
+                  className="flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
+                  onClick={() => onCopyLink(appointment._id)}
+                >
+                  <Copy className="mr-1 h-4 w-4" />
+                  Copy Link
+                </button>
+                <button
+                  className="flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  onClick={() => onStartCall(appointment._id)}
+                >
+                  <Video className="mr-1 h-4 w-4" />
+                  Attend
+                </button>
+                <button
+                  className="flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                  onClick={() => {
+                    onComplete(appointment);
+                    setIsMedicalRecordModalOpen(true);
+                  }}
+                >
+                  <FileText className="mr-1 h-4 w-4" />
+                  Add Record
+                </button>
+                <button
+                  className="flex items-center px-3 py-1.5 border border-red-200 text-sm font-medium rounded text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  onClick={() => onNoShow(appointment._id)}
+                >
+                  No-Show
+                </button>
+              </>
+            )}
+
+            {isPastAppointment && (
+              <button
+                className="flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
+                onClick={() => {
+                  setSelectedAppointment(appointment);
+                  setMedicalRecord(appointment.notes || "");
+                  setIsMedicalRecordModalOpen(true);
+                }}
+              >
+                <FileText className="mr-1 h-4 w-4" />
+                View Record
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const EmptyState = ({ message }) => (
+  <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+    <div className="p-6 text-center">
+      <p className="text-gray-500">{message}</p>
+    </div>
+  </div>
+);
+
+const MedicalRecordModal = ({ isOpen, onClose, onSubmit, medicalRecord, setMedicalRecord, patientName }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div 
+        className="bg-white rounded-lg p-6 w-full max-w-md"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">
+            Medical Record for {patientName}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            ✕
+          </button>
+        </div>
+
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Notes
+            </label>
+            <textarea
+              value={medicalRecord}
+              onChange={(e) => setMedicalRecord(e.target.value)}
+              rows="5"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+              placeholder="Enter medical notes..."
+              required
+            />
+          </div>
+
+          <div className="mt-6 flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
+            >
+              Submit
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};

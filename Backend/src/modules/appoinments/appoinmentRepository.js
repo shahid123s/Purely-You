@@ -49,6 +49,12 @@ export const appointmentRepository = {
             throw new CustomError(error.message, 500)
         }
     }
-         
+    ,getAppointmentsByDoctorId: async (doctorId) => {
+        try {
+            return await DoctorAppointment.find({doctorId: doctorId})
+        } catch (error) {
+            throw new CustomError(error.message, 500)
+        }
+    }
 }
 
