@@ -16,7 +16,10 @@ export default function PatientLogin() {
       const result = await patientAxiosInstance.post('/auth/login', {email, password});
       toast.success(result.data.message);
       // Store token in localStorage
-      localStorage.setItem('patientToken', result.data.token);
+      console.log(result)
+      localStorage.setItem('patientToken', result.data.accessToken);
+      localStorage.setItem('patientName', result.data.name)
+
       navigate('/patient/profile');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Login failed');
