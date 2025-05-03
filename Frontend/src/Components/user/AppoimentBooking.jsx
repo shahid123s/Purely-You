@@ -246,7 +246,7 @@ export default function AppointmentBookingModal({
     setIsSubmitting(true);
 
     try {
-      const response = await patientAxiosInstance.post('/appointments', {
+      const response = await patientAxiosInstance.post('/book-appointment', {
         doctorId: bookingForm.doctor._id,
         date: bookingForm.date,
         time: bookingForm.time,
