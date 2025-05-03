@@ -205,7 +205,11 @@ const markNoShow = async (appointmentId) => {
     today.setHours(0, 0, 0, 0);
     
     if (activeTab === "today") {
-      return isToday(apt.appointmentDate) && apt.status === "scheduled" && matchesSearch;
+      return (
+        isToday(apt.appointmentDate) && 
+        (apt.status === "scheduled" || apt.status === "pending") && // Include pending
+        matchesSearch
+      );
     }
     
     if (activeTab === "upcoming") {
