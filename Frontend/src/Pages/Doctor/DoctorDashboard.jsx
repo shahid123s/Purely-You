@@ -40,24 +40,22 @@ export default function DoctorDashboard() {
     fetchAppointments();
   }, []);
 
-  // Date helpers
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
 
   const isToday = (dateString) => {
     const today = new Date();
     const appointmentDate = new Date(dateString);
-
+    
+    // Convert both to local date strings for comparison
     return (
-      today.getFullYear() === appointmentDate.getFullYear() &&
-      today.getMonth() === appointmentDate.getMonth() &&
-      today.getDate() === appointmentDate.getDate()
+      today.toDateString() === appointmentDate.toDateString()
     );
+  };
+  
+  const isFutureDate = (dateString) => {
+    const today = new Date();
+    const appointmentDate = new Date(dateString);
+    // Compare timestamps to avoid timezone issues
+    return appointmentDate.getTime() > today.getTime();
   };
 
   // Appointment actions
@@ -242,24 +240,18 @@ export default function DoctorDashboard() {
   // Filter appointments
   const filteredAppointments = appointments.filter(apt => {
     const matchesSearch = apt.patientName.toLowerCase().includes(searchTerm.toLowerCase());
-    const appointmentDate = new Date(apt.appointmentDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
     
     if (activeTab === "today") {
-      // Strictly today's scheduled appointments only
-      return (
-        isToday(apt.appointmentDate) && 
-        apt.status === "scheduled" && 
-        matchesSearch
-      );
+      // Only today's scheduled appointments
+      return isToday(apt.appointmentDate) && apt.status === "scheduled" && matchesSearch;
     }
     
     if (activeTab === "upcoming") {
-      // Pending (any date) OR scheduled (future only, not today)
+      // All pending (any date) OR future scheduled (not today)
       return (
         (apt.status === "pending" || 
-         (apt.status === "scheduled" && appointmentDate > today)) &&
+         (apt.status === "scheduled" && isFutureDate(apt.appointmentDate))) &&
+        !(isToday(apt.appointmentDate) && apt.status === "scheduled") && // Explicit exclusion
         matchesSearch
       );
     }
