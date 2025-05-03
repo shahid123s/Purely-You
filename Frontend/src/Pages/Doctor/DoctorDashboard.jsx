@@ -12,6 +12,7 @@ export default function DoctorDashboard() {
   const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [appointmentActions, setAppointmentActions] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,6 +21,18 @@ export default function DoctorDashboard() {
         setIsLoading(true);
         const response = await doctorAxiosInstance.get('/appointments');
         setAppointments(response.data.data);
+        
+        // Initialize appointment actions state
+        const actions = {};
+        response.data.data.forEach(apt => {
+          if (isToday(apt.appointmentDate)) {
+            actions[apt._id] = { 
+              buttonState: 'giveLink', 
+              attended: false 
+            };
+          }
+        });
+        setAppointmentActions(actions);
       } catch (error) {
         console.error('Error fetching appointments:', error);
         toast.error('Failed to load appointments');
@@ -55,37 +68,54 @@ export default function DoctorDashboard() {
   const generateMeetingLink = (appointmentId) => {
     const meetingLink = `${window.location.origin}/doctor/call/${appointmentId}`;
     navigator.clipboard.writeText(meetingLink);
+    setAppointmentActions(prev => ({
+      ...prev,
+      [appointmentId]: { ...prev[appointmentId], buttonState: 'attended' }
+    }));
     toast.success('Meeting link copied to clipboard!');
+  };
+
+  const markAsAttended = (appointmentId) => {
+    setAppointmentActions(prev => ({
+      ...prev,
+      [appointmentId]: { ...prev[appointmentId], buttonState: 'submitRecord' }
+    }));
   };
 
   const acceptAppointment = async (appointmentId) => {
     try {
-      await doctorAxiosInstance.put(`/appointments/${appointmentId}`, {
+      const response = await doctorAxiosInstance.put(`/appointments/${appointmentId}`, {
         status: "scheduled"
       });
       
-      setAppointments(appointments.map(apt => 
-        apt._id === appointmentId ? { ...apt, status: "scheduled" } : apt
-      ));
-      
-      toast.success('Appointment accepted successfully');
+      if (response.data.success) {
+        setAppointments(appointments.map(apt => 
+          apt._id === appointmentId ? { ...apt, status: "scheduled" } : apt
+        ));
+        toast.success('Appointment approved successfully');
+      } else {
+        toast.error('Failed to approve appointment');
+      }
     } catch (error) {
-      console.error('Error accepting appointment:', error);
-      toast.error('Failed to accept appointment');
+      console.error('Error approving appointment:', error);
+      toast.error('Failed to approve appointment');
     }
   };
 
   const rejectAppointment = async (appointmentId) => {
     try {
-      await doctorAxiosInstance.put(`/appointments/${appointmentId}`, {
+      const response = await doctorAxiosInstance.put(`/appointments/${appointmentId}`, {
         status: "rejected"
       });
       
-      setAppointments(appointments.map(apt => 
-        apt._id === appointmentId ? { ...apt, status: "rejected" } : apt
-      ));
-      
-      toast.success('Appointment rejected');
+      if (response.data.success) {
+        setAppointments(appointments.map(apt => 
+          apt._id === appointmentId ? { ...apt, status: "rejected" } : apt
+        ));
+        toast.success('Appointment rejected');
+      } else {
+        toast.error('Failed to reject appointment');
+      }
     } catch (error) {
       console.error('Error rejecting appointment:', error);
       toast.error('Failed to reject appointment');
@@ -99,20 +129,24 @@ export default function DoctorDashboard() {
   const handleMedicalRecordSubmit = async (e) => {
     e.preventDefault();
     try {
-      await doctorAxiosInstance.put(`/appointments/${selectedAppointment._id}`, {
+      const response = await doctorAxiosInstance.put(`/appointments/${selectedAppointment._id}`, {
         notes: medicalRecord,
         status: "completed"
       });
       
-      setAppointments(appointments.map(apt => 
-        apt._id === selectedAppointment._id ? 
-        { ...apt, status: "completed", notes: medicalRecord } : apt
-      ));
-      
-      toast.success('Appointment completed successfully');
-      setIsMedicalRecordModalOpen(false);
-      setMedicalRecord("");
-      setSelectedAppointment(null);
+      if (response.data.success) {
+        setAppointments(appointments.map(apt => 
+          apt._id === selectedAppointment._id ? 
+          { ...apt, status: "completed", notes: medicalRecord } : apt
+        ));
+        
+        toast.success('Appointment completed successfully');
+        setIsMedicalRecordModalOpen(false);
+        setMedicalRecord("");
+        setSelectedAppointment(null);
+      } else {
+        toast.error('Failed to complete appointment');
+      }
     } catch (error) {
       console.error('Error updating appointment:', error);
       toast.error('Failed to complete appointment');
@@ -121,15 +155,18 @@ export default function DoctorDashboard() {
 
   const markNoShow = async (appointmentId) => {
     try {
-      await doctorAxiosInstance.put(`/appointments/${appointmentId}`, { 
+      const response = await doctorAxiosInstance.put(`/appointments/${appointmentId}`, { 
         status: "no-show" 
       });
       
-      setAppointments(appointments.map(apt => 
-        apt._id === appointmentId ? { ...apt, status: "no-show" } : apt
-      ));
-      
-      toast.success('Marked as no-show');
+      if (response.data.success) {
+        setAppointments(appointments.map(apt => 
+          apt._id === appointmentId ? { ...apt, status: "no-show" } : apt
+        ));
+        toast.success('Marked as no-show');
+      } else {
+        toast.error('Failed to update appointment status');
+      }
     } catch (error) {
       console.error('Error marking no-show:', error);
       toast.error('Failed to update appointment status');
@@ -266,13 +303,18 @@ export default function DoctorDashboard() {
                   <AppointmentCard 
                     key={appointment._id}
                     appointment={appointment}
-                    onComplete={() => setSelectedAppointment(appointment)}
+                    onComplete={() => {
+                      setSelectedAppointment(appointment);
+                      setIsMedicalRecordModalOpen(true);
+                    }}
                     onStartCall={startVideoCall}
                     onNoShow={markNoShow}
                     onCopyLink={generateMeetingLink}
+                    onMarkAttended={markAsAttended}
                     onAccept={acceptAppointment}
                     onReject={rejectAppointment}
                     activeTab={activeTab}
+                    buttonState={appointmentActions[appointment._id]?.buttonState || 'giveLink'}
                   />
                 ))}
               </div>
@@ -350,14 +392,53 @@ const AppointmentCard = ({
   onStartCall, 
   onNoShow, 
   onCopyLink,
+  onMarkAttended,
   onAccept,
   onReject,
-  activeTab 
+  activeTab,
+  buttonState
 }) => {
   const isPending = appointment.status === "pending";
   const isTodayAppointment = activeTab === "today";
   const isUpcomingAppointment = activeTab === "upcoming";
   const isPastAppointment = activeTab === "past";
+
+  const renderTodayButtons = () => {
+    switch (buttonState) {
+      case 'giveLink':
+        return (
+          <button
+            className="flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
+            onClick={() => onCopyLink(appointment._id)}
+          >
+            <Copy className="mr-1 h-4 w-4" />
+            Give Link
+          </button>
+        );
+      case 'attended':
+        return (
+          <button
+            className="flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            onClick={() => onMarkAttended(appointment._id)}
+          >
+            <Video className="mr-1 h-4 w-4" />
+            Attended
+          </button>
+        );
+      case 'submitRecord':
+        return (
+          <button
+            className="flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            onClick={() => onComplete()}
+          >
+            <FileText className="mr-1 h-4 w-4" />
+            Submit Record
+          </button>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
@@ -400,7 +481,7 @@ const AppointmentCard = ({
                   onClick={() => onAccept(appointment._id)}
                 >
                   <Check className="mr-1 h-4 w-4" />
-                  Accept
+                  Approve
                 </button>
                 <button
                   className="flex items-center px-3 py-1.5 border border-red-200 text-sm font-medium rounded text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
@@ -413,30 +494,7 @@ const AppointmentCard = ({
 
             {isTodayAppointment && (
               <>
-                <button
-                  className="flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
-                  onClick={() => onCopyLink(appointment._id)}
-                >
-                  <Copy className="mr-1 h-4 w-4" />
-                  Copy Link
-                </button>
-                <button
-                  className="flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  onClick={() => onStartCall(appointment._id)}
-                >
-                  <Video className="mr-1 h-4 w-4" />
-                  Attend
-                </button>
-                <button
-                  className="flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                  onClick={() => {
-                    onComplete(appointment);
-                    setIsMedicalRecordModalOpen(true);
-                  }}
-                >
-                  <FileText className="mr-1 h-4 w-4" />
-                  Add Record
-                </button>
+                {renderTodayButtons()}
                 <button
                   className="flex items-center px-3 py-1.5 border border-red-200 text-sm font-medium rounded text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                   onClick={() => onNoShow(appointment._id)}
@@ -449,11 +507,7 @@ const AppointmentCard = ({
             {isPastAppointment && (
               <button
                 className="flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
-                onClick={() => {
-                  setSelectedAppointment(appointment);
-                  setMedicalRecord(appointment.notes || "");
-                  setIsMedicalRecordModalOpen(true);
-                }}
+                onClick={() => onComplete()}
               >
                 <FileText className="mr-1 h-4 w-4" />
                 View Record
