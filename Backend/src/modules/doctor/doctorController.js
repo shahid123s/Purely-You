@@ -66,10 +66,32 @@ export const doctorController = {
     },
     updateUIState: async(req, res, next) => {
         try {
-            const {appointmentId, buttonState, attended} = req.body;
+            const {appointmentId, buttonState, attended, roomId} = req.body;
             console.log(req.body, 'req.body in doctorController');
             console.log(appointmentId, buttonState, 'appoinmentId, buttonState in doctorController');
-            const result = await doctorService.updateUIState(appointmentId, {buttonState, attended});
+            const result = await doctorService.updateUIState(appointmentId, {buttonState, attended, roomId});
+            console.log(result, 'result in doctorController');
+            if(!result) {
+                return res.status(404).json({
+                    success: false,
+                    message: "No Appoinments Found",
+                })
+            }
+            return res.status(200).json({
+                success: true,
+                message: "Appoinments Found",
+                data: result
+            })
+        } catch (error) {
+            next(error)
+        }
+
+    },
+    updateRecords: async(req, res, next) => {
+        try {
+            const {appointmentId, notes, status,} = req.body;
+            console.log(req.body, 'req.body in doctorController');  
+            const result = await doctorService.updateRecords(appointmentId, notes, status);
             console.log(result, 'result in doctorController');
             if(!result) {
                 return res.status(404).json({

@@ -65,7 +65,28 @@ export const appointmentRepository = {
                 {
                     $set: {
                         "uiState.buttonState": data.buttonState,
-                        "uiState.attended": data.attended
+                        "uiState.attended": data.attended,
+                        roomId: data?.roomId,
+                    }
+                },
+                { new: true }
+            );
+
+            console.log(updatedAppointment, 'updatedAppointment in repo')
+            return updatedAppointment;
+        } catch (error) {
+            throw new CustomError(error.message, 500)
+        }
+    },
+    updateSumbit: async (id, data) => {
+        try {
+            const updatedAppointment = await DoctorAppointment.findByIdAndUpdate(
+                id,
+                {
+                    $set: {
+                        notes : data.notes,
+                        "uiState.buttonState": data.status,
+                        status: data.status,
                     }
                 },
                 { new: true }

@@ -19,6 +19,7 @@ export default function PatientLogin() {
       console.log(result)
       localStorage.setItem('patientToken', result.data.accessToken);
       localStorage.setItem('patientName', result.data.name)
+      localStorage.setItem('patientId', result.data._id)
 
       navigate('/patient/profile');
     } catch (error) {

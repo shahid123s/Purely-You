@@ -12,6 +12,7 @@ import {
 import patientAxiosInstance from "../../utils/patientAxios";
 import { toast } from "sonner";
 import AppointmentBookingModal from "../../components/user/AppoimentBooking";
+import { useNavigate } from "react-router-dom";
 
 const DoctorDropdown = ({
   doctors,
@@ -281,8 +282,7 @@ export default function PatientProfile() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
-  const [isMedicalRecordModalOpen, setIsMedicalRecordModalOpen] =
-    useState(false);
+  const [isMedicalRecordModalOpen, setIsMedicalRecordModalOpen] = useState(false);
   const [selectedMedicalRecord, setSelectedMedicalRecord] = useState("");
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [appointmentFilter, setAppointmentFilter] = useState("all");
@@ -319,13 +319,17 @@ export default function PatientProfile() {
     reason: "",
   });
 
+  const navigate = useNavigate()
+
   // Fetch patient data
   useEffect(() => {
     const fetchPatientData = async () => {
       try {
         setIsLoading(true);
         const response = await patientAxiosInstance.get("/profile");
-        const patientData = response.data.data; // Access the data property from the response
+        const patientData = response.data.data; 
+
+        // Access the data property from the response
         setPatient({
           _id: patientData._id,
           name: patientData.name,
@@ -568,9 +572,10 @@ export default function PatientProfile() {
   };
 
   const handleAttendMeeting = (appointmentId) => {
-    // Implement meeting attendance logic here
+
+    navigate(`/patient/call/${appointmentId}`)
     toast.info("Redirecting to meeting...");
-    // In a real app, you would redirect to the meeting URL
+
   };
 
   return (
@@ -748,9 +753,12 @@ export default function PatientProfile() {
                               </div>
 
                               <div className="mt-4 md:mt-0 flex items-center space-x-2">
-                                {appointment.uiState?.buttonState === "giveLink" && (
+                                {(appointment.uiState?.buttonState === "attended" ) && (
                                   <button
-                                    onClick={() => handleAttendMeeting(appointment._id)}
+                                    onClick={() => {
+                                      console.log(appointment)
+                                      handleAttendMeeting(appointment.roomId)
+                                    }}
                                     className="px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 flex items-center"
                                   >
                                     <FiLink className="mr-1 h-4 w-4" />
@@ -764,8 +772,8 @@ export default function PatientProfile() {
                                     Waiting for doctor to submit record
                                   </div>
                                 )}
-
-                                {appointment.uiState?.buttonState === "completed" && appointment.notes && (
+            {console.log(appointment)}
+                                {appointment.status === "completed" && appointment.notes && (
                                   <button
                                     className="px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 flex items-center"
                                     onClick={() => viewMedicalRecord(appointment.notes)}

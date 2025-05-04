@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ZegoUIKitPrebuilt } from '@zegocloud/zego-uikit-prebuilt';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const VideoCall = () => {
   const containerRef = useRef(null);
@@ -17,6 +17,10 @@ const VideoCall = () => {
   });
 
   const navigate = useNavigate()
+  const location = useLocation();
+  
+  const [roomId, setRoomId] = useState(location.state?.roomId)
+
 
   useEffect(() => {
     if (!userDetails) return;
@@ -24,14 +28,15 @@ const VideoCall = () => {
     const appID = Number(import.meta.env.VITE_APPID);
     const serverSecret = import.meta.env.VITE_APP_SIGN;
 
+
     
     console.log(userDetails.roomId, 'roomId')
     const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
       appID,
       serverSecret,
-      userDetails.roomId,
+     roomId,
       userDetails._id, // Use the ID from stored details
-      userDetails.name // Use the name from stored details
+      `Dr.${userDetails.name}` // Use the name from stored details
     );
 
     const zp = ZegoUIKitPrebuilt.create(kitToken);
@@ -39,7 +44,7 @@ const VideoCall = () => {
       container: containerRef.current,
       sharedLinks: [{
         name: 'Copy Link',
-        url: `${window.location.origin}/video/${userDetails.roomId}`,
+        url: `${window.location.origin}/video/${roomId}`,
       }],
       scenario: {
         mode: ZegoUIKitPrebuilt.VideoConference,

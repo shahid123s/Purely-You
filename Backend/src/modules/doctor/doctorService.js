@@ -22,5 +22,12 @@ export const doctorService = {
         const response = await appointmentRepository.updateAppointmentUIState(id, uiState);
         return response;
     
+    },
+    updateRecords: async(id, notes, status) => {
+        console.log(id, notes, 'in service')
+        console.log(status, 'status in service')
+        const response = await appointmentRepository.updateSumbit(id, {notes, status});
+        return response;
+
     }
 }

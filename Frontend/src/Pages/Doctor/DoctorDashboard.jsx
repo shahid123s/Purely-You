@@ -12,7 +12,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import doctorAxiosInstance from "../../utils/doctorAxiosInstance";
 import { toast } from "sonner";
-
+const doctorDetails = localStorage.getItem('doctorDetails');
 export default function DoctorDashboard() {
   const [activeTab, setActiveTab] = useState("today");
   const [isMedicalRecordModalOpen, setIsMedicalRecordModalOpen] =
@@ -37,6 +37,8 @@ export default function DoctorDashboard() {
         setIsLoading(false);
       }
     };
+
+      console.log(doctorDetails, 'ith');
     fetchAppointments();
   }, []);
 
@@ -61,13 +63,15 @@ export default function DoctorDashboard() {
   // Appointment actions
   const generateMeetingLink = async (appointmentId) => {
     try {
-      const meetingLink = `${window.location.origin}/doctor/call/${appointmentId}`;
+      
+      const meetingLink = `${window.location.origin}/patient/call/${appointmentId}`;
       await navigator.clipboard.writeText(meetingLink);
 
       const response = await doctorAxiosInstance.put(`/appointments/ui-state`, {
         buttonState: "attended",
         attended: false,
         appointmentId,
+        roomId:appointmentId,
       });
 
       if (response.data.success) {
@@ -98,6 +102,7 @@ export default function DoctorDashboard() {
         buttonState: "submitRecord",
         attended: true,
         appointmentId,
+        
       });
 
       if (response.data.success) {
@@ -111,7 +116,7 @@ export default function DoctorDashboard() {
               : apt
           )
         );
-        navigate('/doctor/call')
+        navigate('/doctor/call', {state: {roomId: appointmentId}})
       } else {
         toast.error("Failed to update appointment status");
       }
@@ -178,10 +183,11 @@ export default function DoctorDashboard() {
     e.preventDefault();
     try {
       const response = await doctorAxiosInstance.put(
-        `/appointments/${selectedAppointment._id}`,
+        `/appointments`,
         {
           notes: medicalRecord,
           status: "completed",
+          appointmentId: selectedAppointment._id,
         }
       );
 
