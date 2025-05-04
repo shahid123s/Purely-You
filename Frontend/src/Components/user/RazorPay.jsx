@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useRazorpay } from "react-razorpay";
 import toast from "react-hot-toast";
-import patientAxiosInstance from "../../utils/patientAxios";
 import { fetchPatientProfile } from "../../services/FetchDatas";
 
 const RazorPay = ({ amount, handlePlaceOrder, isWallet }) => {
@@ -17,6 +16,7 @@ const RazorPay = ({ amount, handlePlaceOrder, isWallet }) => {
       const getUserInfo = async () => {
         try {
           const response = await fetchPatientProfile();
+          console.log(response)
           setUserInfo({
             name: response.data.data.name,
             email: response.data.data.email,
