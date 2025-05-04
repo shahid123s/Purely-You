@@ -1,10 +1,12 @@
 import express from 'express';
+import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import connectMongoDb from './src/config/dbConfig.js';
 import corsConfig from './src/config/corsConfig.js';
 import {appConfig} from './src/config/appConfig.js';
 import errorHandler from './src/middleware/errorHandler.js';
 
+dotenv.config()
 // Routers
 import patientRoute from './src/modules/user/userRoute.js';
 import aiRoute from './src/modules/aiAnalys/aiRouter.js'
