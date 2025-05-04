@@ -1,9 +1,8 @@
 import CustomError from "../../utils/CustomError.js"
-import { adminRepository } from "../admin/adminRepository.js";
-import { adminServices } from "../admin/adminServices.js";
-import { getAllDoctors, getAppointments } from "./userController.js";
 import { userRepository } from "./userRepository.js";
 import { appointmentRepository } from "../appoinments/appoinmentRepository.js";
+import { doctorRepository } from "../doctor/doctorRepository.js";
+import {chatRepository} from '../chat/chatRepositroy.js'
 
 export const userServices = {
     getUserDetails:async (userId) => {
@@ -12,6 +11,14 @@ export const userServices = {
             return user;
         } catch (error) {
             throw new CustomError("Error in getting user details" + error.message, 500);
+        }
+    },
+    getDoctorDetails:async (doctorId) => {
+        try {
+            const doctor = await doctorRepository.getDoctorById(doctorId);
+            return doctor;
+        } catch (error) {
+            throw new CustomError("Error in getting doctor details" + error.message, 500);
         }
     },
      getAllDoctors: async () => {
@@ -37,6 +44,29 @@ export const userServices = {
             return appointment;
         } catch (error) {
             throw new CustomError("Error in booking appointment" + error.message, 500);
+        }
+    }
+    ,
+    getDoctorChat: async (doctorId, patientId) => {
+        try {
+            console.log(doctorId)
+            let chat = await chatRepository.getChat(doctorId, patientId);
+            if(!chat )
+                chat = await chatRepository.createChat({doctor: doctorId, patient: patientId});
+            return chat;
+        } catch (error) {
+            throw new CustomError("Error in getting doctor chat" + error.message, 500);
+        }
+    },
+    sendMessage: async (data) => {
+        try {
+            const chat = await chatRepository.getChat(data.doctorId, data.patientId);
+            if(!chat)
+                throw new CustomError("Chat not found", 404);
+            chat.content.push({ msg: data.newMessage, sender: 'patient'});
+            await chatRepository.updateChat(chat);
+        } catch (error) {
+            throw new CustomError("Error in sending message" + error.message, 500);
         }
     }
 }

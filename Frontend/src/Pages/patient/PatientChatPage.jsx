@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchDoctorDetails } from '../../services/FetchDatas';
+import { fetchDoctorChat, fetchDoctorDetails } from '../../services/FetchDatas';
+import { sendMessageToDoctor } from '../../services/sendData';
+
 
 const PatientChatPage = () => {
   const { doctorId } = useParams();
@@ -13,24 +15,31 @@ const PatientChatPage = () => {
   useEffect(() => {
     const loadDoctor = async () => {
       const result = await fetchDoctorDetails(doctorId);
-      setDoctor(result.data);
+      setDoctor(result.data.data);
+    };
+    const loadChat = async () => {
+      const result = await fetchDoctorChat(doctorId);
+      setMessages(result.data.data.content);
     };
     loadDoctor();
+    loadChat()
   }, [doctorId]);
 
-  const handleSendMessage = () => {
-    if (questionCount >= 2) return;
+  const handleSendMessage = async () => {
+    if (questionCount >= 4) return;
     
     if (newMessage.trim()) {
       // Add user's question
+      const result = await sendMessageToDoctor({doctorId, newMessage});
+      console.log(result);
       setMessages(prev => [...prev, 
-        { text: newMessage, sender: 'user', isQuestion: true }
+        { msg: newMessage, sender: 'patient', isQuestion: true }
       ]);
       
       // Simulate doctor's reply after 1 second
       setTimeout(() => {
         setMessages(prev => [...prev,
-          { text: "This is a sample response from the doctor.", sender: 'doctor' }
+          { text: "We will consider you msg to the doctor. You may please wait. Don't reply on this message you'll get Doctors answer soon", sender: 'doctor' }
         ]);
       }, 1000);
 
@@ -53,7 +62,7 @@ const PatientChatPage = () => {
           />
           <div className="ml-4">
             <h2 className="text-xl font-bold">{doctor?.name ||'oka'}</h2>
-            <p className="text-gray-600">{doctor?.specialization || 'oooo'}</p>
+            <p className="text-gray-600">{doctor?.specialization || 'Dermatologist'}</p>
           </div>
         </div>
 
@@ -62,19 +71,19 @@ const PatientChatPage = () => {
           {messages.map((message, index) => (
             <div 
               key={index}
-              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${message.sender === 'patient' ? 'justify-end' : 'justify-start'}`}
             >
               <div className={`max-w-xs p-3 rounded-lg ${
                 message.sender === 'user' 
                   ? 'bg-blue-100 ml-auto' 
                   : 'bg-gray-100'
               }`}>
-                <p className="text-gray-800">{message.text}</p>
+                <p className="text-gray-800">{message.msg}</p>
               </div>
             </div>
           ))}
 
-          {questionCount >= 2 && (
+          {questionCount >= 4 && (
             <div className="text-center p-4 bg-yellow-100 rounded-lg">
               <p className="text-yellow-800">
                 You've reached your question limit. Please 
@@ -99,11 +108,11 @@ const PatientChatPage = () => {
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
             placeholder="Type your question..."
             className="flex-1 p-2 border rounded-lg"
-            disabled={questionCount >= 2}
+            disabled={questionCount >= 4}
           />
           <button
             onClick={handleSendMessage}
-            disabled={questionCount >= 2}
+            disabled={questionCount >= 4}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400"
           >
             Send

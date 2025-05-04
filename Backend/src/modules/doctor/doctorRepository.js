@@ -19,7 +19,7 @@ import Doctor from "./doctorModel.js";
     },
     getDoctorById: async (doctorId) => {
         try {
-            return await Doctor.findById(doctorId).lean();
+            return await Doctor.findById(doctorId, '-password').lean();
         } catch (error) {
             throw new CustomError(error.message, 500)
         }

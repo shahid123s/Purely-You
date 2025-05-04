@@ -19,6 +19,7 @@ export const fetchPatientProfile = async ( userId ) => {
 export const fetchDoctors = async () => {
     try {
         const result = await patientAxiosInstance.get('/doctors')
+        console.log(result)
         return result;
     } catch (error) {
         return error
@@ -29,7 +30,21 @@ export const fetchDoctors = async () => {
 
 export const fetchDoctorDetails = async (doctorId) => {
     try {
-        const result = await patientAxiosInstance.get(`/doctor/${doctorId}`)
+        console.log(doctorId);
+        const result = await patientAxiosInstance.get(`/doctor`, {
+            params: {doctorId}
+        })
+        console.log(result, 'result')
+        return result;
+    } catch (error) {
+        return error
+    }
+}
+
+
+export const fetchDoctorChat = async (doctorId) => {
+    try {
+        const result = await patientAxiosInstance.get(`/chat/${doctorId}`)
         return result;
     } catch (error) {
         return error
