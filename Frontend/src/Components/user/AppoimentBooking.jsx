@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { FiSearch, FiX, FiUser, FiCalendar, FiClock } from "react-icons/fi";
 import patientAxiosInstance from "../../utils/patientAxios";
 import { toast } from "sonner";
+import RazorPay from "./RazorPay";
 
 const DoctorDropdown = ({ 
   doctors = [], 
@@ -173,6 +174,8 @@ export default function AppointmentBookingModal({
   const [doctors, setDoctors] = useState([]);
   const [isLoadingDoctors, setIsLoadingDoctors] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [appointmentData, setAppointmentData] = useState(null);
 
   const [bookingForm, setBookingForm] = useState({
     doctor: null,
@@ -221,6 +224,7 @@ export default function AppointmentBookingModal({
         notes: "",
       });
       setAvailableTimes([]);
+      setShowPayment(false);
     }
   }, [isOpen]);
 
@@ -246,24 +250,38 @@ export default function AppointmentBookingModal({
     setIsSubmitting(true);
 
     try {
-      const response = await patientAxiosInstance.post('/book-appointment', {
+      const appointmentData = {
         doctorId: bookingForm.doctor._id,
         doctorName: bookingForm.doctor.name,  
         appointmentDate: bookingForm.date,
         appointmentTime: bookingForm.time,
         reason: bookingForm.concern,
         notes: bookingForm.notes,
-        patientName:localStorage.getItem('patientName')
+        patientName: localStorage.getItem('patientName')
+      };
 
-      });
-
-      toast.success('Appointment booked successfully!');
-      onBookingSuccess(response.data.data);
+      // Store the appointment data for after payment
+      setAppointmentData(appointmentData);
+      setShowPayment(true);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to book appointment');
-      console.error('Error booking appointment:', error);
+      toast.error(error.response?.data?.message || 'Failed to process appointment');
+      console.error('Error processing appointment:', error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePaymentSuccess = async (paymentStatus) => {
+    if (paymentStatus === "Success" && appointmentData) {
+      try {
+        const response = await patientAxiosInstance.post('/book-appointment', appointmentData);
+        toast.success('Appointment booked successfully!');
+        onBookingSuccess(response.data.data);
+        onClose();
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Failed to confirm appointment after payment');
+        console.error('Error confirming appointment:', error);
+      }
     }
   };
 
@@ -308,154 +326,175 @@ export default function AppointmentBookingModal({
           </button>
         </div>
 
-        <form onSubmit={handleBookingSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dermatologist*
-              </label>
-              <DoctorDropdown
-                doctors={doctors}
-                selectedDoctor={bookingForm.doctor}
-                onSelect={handleDoctorSelect}
-                placeholder="Select a dermatologist"
-                isLoading={isLoadingDoctors}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Appointment Date*
-              </label>
-              <DateDropdown
-                selectedDate={bookingForm.date}
-                onDateChange={handleDateSelect}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Appointment Time*
-              </label>
-              <select
-                name="time"
-                value={bookingForm.time}
-                onChange={handleInputChange}
-                className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 ${
-                  !bookingForm.date ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
-                }`}
-                required
-                disabled={!bookingForm.date}
-              >
-                <option value="">{bookingForm.date ? "Select a time" : "First select a date"}</option>
-                {availableTimes.map((time) => (
-                  <option key={time} value={time}>
-                    {time}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Skin Concern*
-            </label>
-            <input
-              type="text"
-              name="concern"
-              value={bookingForm.concern}
-              onChange={handleInputChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
-              placeholder="e.g. Acne, rosacea, anti-aging, etc."
-              required
+        {showPayment ? (
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-800">Complete Payment</h3>
+            <p className="text-gray-600">Consultation Fee: ₹{bookingForm.doctor?.consultationFee || 500}</p>
+            <RazorPay 
+              amount={bookingForm.doctor?.consultationFee || 500} 
+              handlePlaceOrder={handlePaymentSuccess}
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Additional Notes (Optional)
-            </label>
-            <textarea
-              name="notes"
-              value={bookingForm.notes}
-              onChange={handleInputChange}
-              rows="3"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
-              placeholder="Any other information about your skin condition..."
-            />
-          </div>
-
-          {bookingForm.doctor && (
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Selected Dermatologist</h3>
-              <div className="flex items-center space-x-4">
-                <div className="flex-shrink-0">
-                  {bookingForm.doctor.image ? (
-                    <img
-                      className="h-16 w-16 rounded-full object-cover"
-                      src={bookingForm.doctor.image}
-                      alt="Dermatologist"
-                    />
-                  ) : (
-                    <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
-                      <FiUser className="text-gray-500 h-8 w-8" />
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <h4 className="text-lg font-medium text-gray-900">
-                    {bookingForm.doctor.name}
-                  </h4>
-                  <p className="text-sm text-gray-500">{bookingForm.doctor.specialty}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="mt-6 flex justify-end space-x-3">
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => setShowPayment(false)}
               className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-              disabled={isSubmitting || !bookingForm.doctor || !bookingForm.date || !bookingForm.time || !bookingForm.concern}
-            >
-              {isSubmitting ? (
-                <>
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Booking...
-                </>
-              ) : (
-                "Book Consultation"
-              )}
+              Back to Appointment Details
             </button>
           </div>
-        </form>
+        ) : (
+          <form onSubmit={handleBookingSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Dermatologist*
+                </label>
+                <DoctorDropdown
+                  doctors={doctors}
+                  selectedDoctor={bookingForm.doctor}
+                  onSelect={handleDoctorSelect}
+                  placeholder="Select a dermatologist"
+                  isLoading={isLoadingDoctors}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Appointment Date*
+                </label>
+                <DateDropdown
+                  selectedDate={bookingForm.date}
+                  onDateChange={handleDateSelect}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Appointment Time*
+                </label>
+                <select
+                  name="time"
+                  value={bookingForm.time}
+                  onChange={handleInputChange}
+                  className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 ${
+                    !bookingForm.date ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                  }`}
+                  required
+                  disabled={!bookingForm.date}
+                >
+                  <option value="">{bookingForm.date ? "Select a time" : "First select a date"}</option>
+                  {availableTimes.map((time) => (
+                    <option key={time} value={time}>
+                      {time}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Skin Concern*
+              </label>
+              <input
+                type="text"
+                name="concern"
+                value={bookingForm.concern}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+                placeholder="e.g. Acne, rosacea, anti-aging, etc."
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Additional Notes (Optional)
+              </label>
+              <textarea
+                name="notes"
+                value={bookingForm.notes}
+                onChange={handleInputChange}
+                rows="3"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500"
+                placeholder="Any other information about your skin condition..."
+              />
+            </div>
+
+            {bookingForm.doctor && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Selected Dermatologist</h3>
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    {bookingForm.doctor.image ? (
+                      <img
+                        className="h-16 w-16 rounded-full object-cover"
+                        src={bookingForm.doctor.image}
+                        alt="Dermatologist"
+                      />
+                    ) : (
+                      <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
+                        <FiUser className="text-gray-500 h-8 w-8" />
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-medium text-gray-900">
+                      {bookingForm.doctor.name}
+                    </h4>
+                    <p className="text-sm text-gray-500">{bookingForm.doctor.specialty}</p>
+                    <p className="text-sm font-medium mt-1">
+                      Consultation Fee: ₹{bookingForm.doctor.consultationFee || 500}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                disabled={isSubmitting || !bookingForm.doctor || !bookingForm.date || !bookingForm.time || !bookingForm.concern}
+              >
+                {isSubmitting ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Processing...
+                  </>
+                ) : (
+                  "Proceed to Payment"
+                )}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );
