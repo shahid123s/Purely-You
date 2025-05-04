@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useRazorpay } from "react-razorpay";
 import toast from "react-hot-toast";
 import patientAxiosInstance from "../../utils/patientAxios";
+import { fetchPatientProfile } from "../../services/FetchDatas";
 
 const RazorPay = ({ amount, handlePlaceOrder, isWallet }) => {
   const { error, Razorpay } = useRazorpay();
@@ -15,11 +16,11 @@ const RazorPay = ({ amount, handlePlaceOrder, isWallet }) => {
     if (!userInfo) {
       const getUserInfo = async () => {
         try {
-          const response = await patientAxiosInstance.get("/get-user-info");
+          const response = await fetchPatientProfile();
           setUserInfo({
-            name: response.data.userData.firstName + " " + response.data.userData.lastName,
-            email: response.data.userData.email,
-            contact: response.data.userData.phoneNumber,
+            name: response.data.data.name,
+            email: response.data.data.email,
+            contact: response.data.data.phoneNumber,
           });
         } catch (err) {
           console.error("Error fetching user info:", err);
