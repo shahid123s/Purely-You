@@ -61,8 +61,10 @@ export const userServices = {
     sendMessage: async (data) => {
         try {
             const chat = await chatRepository.getChat(data.doctorId, data.patientId);
-            if(!chat)
+            if(!chat){
                 throw new CustomError("Chat not found", 404);
+            }
+            console.log(chat, 'chat')
             chat.content.push({ msg: data.newMessage, sender: 'patient'});
             await chatRepository.updateChat(chat);
         } catch (error) {

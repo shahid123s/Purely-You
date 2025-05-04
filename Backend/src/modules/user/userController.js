@@ -138,12 +138,12 @@ export const sendMessage = async (req, res, next) => {
         console.log(newMessage, 'newMessage in userController');
         console.log(req.body, 'req.body in userController')
         const result = await userServices.sendMessage({doctorId, patientId, newMessage});
-        // if(!result) {
-        //     return res.status(404).json({
-        //         success: false,
-        //         message: "User Not Found",
-        //     })
-        // }
+        if(!result) {
+            return res.status(404).json({
+                success: false,
+                message: "User Not Found",
+            })
+        }
         return res.status(200).json({
             success: true,
             message: "User Found",

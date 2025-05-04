@@ -3,121 +3,190 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { fetchDoctorChat, fetchDoctorDetails } from '../../services/FetchDatas';
 import { sendMessageToDoctor } from '../../services/sendData';
 
-
 const PatientChatPage = () => {
   const { doctorId } = useParams();
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [questionCount, setQuestionCount] = useState(0);
-  const [doctor, setDoctor] = useState({});
+  const [patientMessageCount, setPatientMessageCount] = useState(0);
+  const [doctor, setDoctor] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
 
+  // Load doctor details and chat history
   useEffect(() => {
-    const loadDoctor = async () => {
-      const result = await fetchDoctorDetails(doctorId);
-      setDoctor(result.data.data);
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const [doctorRes, chatRes] = await Promise.all([
+          fetchDoctorDetails(doctorId),
+          fetchDoctorChat(doctorId)
+        ]);
+
+        setDoctor(doctorRes.data.data);
+        setMessages(chatRes.data.data.content || []);
+        
+        // Count existing patient messages
+        const initialCount = (chatRes.data.data.content || [])
+          .filter(msg => msg.sender === 'patient').length;
+        setPatientMessageCount(initialCount);
+      } catch (error) {
+        console.error('Error loading chat:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    const loadChat = async () => {
-      const result = await fetchDoctorChat(doctorId);
-      setMessages(result.data.data.content);
-    };
-    loadDoctor();
-    loadChat()
+
+    loadData();
   }, [doctorId]);
 
   const handleSendMessage = async () => {
-    if (questionCount >= 4) return;
-    
-    if (newMessage.trim()) {
-      // Add user's question
-      const result = await sendMessageToDoctor({doctorId, newMessage});
-      console.log(result);
-      setMessages(prev => [...prev, 
-        { msg: newMessage, sender: 'patient', isQuestion: true }
-      ]);
+    if (patientMessageCount >= 4 || !newMessage.trim() || isSending) return;
+
+    try {
+      setIsSending(true);
       
-      // Simulate doctor's reply after 1 second
+      // Optimistically update UI
+      const tempId = Date.now(); // Temporary ID for the message
+      setMessages(prev => [...prev, 
+        { 
+          _id: tempId, 
+          msg: newMessage, 
+          sender: 'patient', 
+          createdAt: new Date().toISOString() 
+        }
+      ]);
+      setPatientMessageCount(prev => prev + 1);
+      setNewMessage('');
+
+      // Send to backend
+      const result = await sendMessageToDoctor({ doctorId, newMessage });
+      
+      // Replace temp message with actual response
+      setMessages(prev => prev.map(msg => 
+        msg._id === tempId ? result.data.data : msg
+      ));
+
+      // Simulate doctor reply (replace with real-time updates when implemented)
       setTimeout(() => {
         setMessages(prev => [...prev,
-          { text: "We will consider you msg to the doctor. You may please wait. Don't reply on this message you'll get Doctors answer soon", sender: 'doctor' }
+          { 
+            _id: Date.now(),
+            msg: "Thank you for your message. The doctor will respond shortly.", 
+            sender: 'doctor',
+            createdAt: new Date().toISOString()
+          }
         ]);
       }, 1000);
 
-      setQuestionCount(prev => prev + 1);
-      setNewMessage('');
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      // Rollback on error
+      setMessages(prev => prev.filter(msg => msg._id !== tempId));
+      setPatientMessageCount(prev => prev - 1);
+      toast.error('Failed to send message');
+    } finally {
+      setIsSending(false);
     }
   };
 
-  // if (!doctor) return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-4">
       <div className="bg-white rounded-lg shadow-md p-4">
         {/* Doctor Header */}
         <div className="flex items-center mb-6 border-b pb-4">
+          <button 
+            onClick={() => navigate(-1)}
+            className="mr-2 p-1 rounded-full hover:bg-gray-100"
+          >
+            ←
+          </button>
           <img 
-            src={doctor?.profileImage ||'./placeholder'} 
-            alt={doctor?.name || ''}
-            className="w-16 h-16 rounded-full object-cover"
+            src={doctor?.profileImage || '/default-avatar.png'} 
+            alt={doctor?.name}
+            className="w-12 h-12 rounded-full object-cover"
           />
           <div className="ml-4">
-            <h2 className="text-xl font-bold">{doctor?.name ||'oka'}</h2>
-            <p className="text-gray-600">{doctor?.specialization || 'Dermatologist'}</p>
+            <h2 className="text-xl font-bold">{doctor?.name || 'Doctor'}</h2>
+            <p className="text-gray-600">{doctor?.specialization || 'Specialist'}</p>
           </div>
         </div>
 
         {/* Chat Messages */}
-        <div className="h-96 overflow-y-auto mb-4 space-y-4">
-          {messages.map((message, index) => (
-            <div 
-              key={index}
-              className={`flex ${message.sender === 'patient' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className={`max-w-xs p-3 rounded-lg ${
-                message.sender === 'user' 
-                  ? 'bg-blue-100 ml-auto' 
-                  : 'bg-gray-100'
-              }`}>
-                <p className="text-gray-800">{message.msg}</p>
-              </div>
+        <div className="h-[calc(100vh-300px)] overflow-y-auto mb-4 space-y-4 p-2">
+          {messages.length === 0 ? (
+            <div className="text-center py-10 text-gray-500">
+              No messages yet. Start the conversation!
             </div>
-          ))}
+          ) : (
+            messages.map((message) => (
+              <div 
+                key={message._id} 
+                className={`flex ${message.sender === 'patient' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div className={`max-w-xs p-3 rounded-lg ${
+                  message.sender === 'patient' 
+                    ? 'bg-cyan-100 text-cyan-900 ml-auto' 
+                    : 'bg-gray-100 text-gray-900'
+                }`}>
+                  <p>{message.msg}</p>
+                  <p className="text-xs mt-1 opacity-70">
+                    {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
 
-          {questionCount >= 4 && (
-            <div className="text-center p-4 bg-yellow-100 rounded-lg">
+          {patientMessageCount >= 4 && (
+            <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
               <p className="text-yellow-800">
-                You've reached your question limit. Please 
+                You've reached your message limit. Please{' '}
                 <button 
                   onClick={() => navigate('/appointment')}
-                  className="ml-1 text-blue-600 hover:underline"
+                  className="text-cyan-600 hover:underline font-medium"
                 >
                   book an appointment
-                </button> 
-                for further clarification.
+                </button>{' '}
+                for further discussion.
               </p>
             </div>
           )}
         </div>
 
         {/* Message Input */}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-            placeholder="Type your question..."
-            className="flex-1 p-2 border rounded-lg"
-            disabled={questionCount >= 4}
-          />
-          <button
-            onClick={handleSendMessage}
-            disabled={questionCount >= 4}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400"
-          >
-            Send
-          </button>
-        </div>
+        {patientMessageCount < 4 && (
+          <div className="flex gap-2 items-center">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              placeholder="Type your message..."
+              className="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+              disabled={isSending}
+            />
+            <button
+              onClick={handleSendMessage}
+              disabled={!newMessage.trim() || isSending}
+              className={`p-3 rounded-lg ${
+                !newMessage.trim() || isSending
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : 'bg-cyan-600 hover:bg-cyan-700'
+              } text-white`}
+            >
+              {isSending ? 'Sending...' : 'Send'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
