@@ -1,46 +1,21 @@
-import { useEffect } from 'react'
-import Image1 from '../../assets/doctor1.jpg'
-import Image2 from '../../assets/doctor2.jpg'
-import Image3 from '../../assets/doctor3.jpg'
-import Image4 from '../../assets/doctor4.jpg'
-import { fetchDoctors } from '../../services/FetchDatas'
-export default function TeamSection({
-    doctors = [
-      {
-        id: "dr-james-roberts",
-        name: "Dr. James Roberts",
-        title: "Certified Dermatologist",
-        specialty: "Dermatologist",
-        image: Image1,
-      },
-      {
-        id: "dr-emily-clark",
-        name: "Dr. Emily Clark",
-        title: "Experienced Skincare",
-        specialty: "Dermatologist",
-        image: Image2 ,
-      },
-      {
-        id: "dr-michael-thompson",
-        name: "Dr. Michael Thompson",
-        title: "Skilled Internal Medicine",
-        specialty: "Dermatologist",
-        image:Image3,
-      },
-      {
-        id: "dr-david-lee",
-        name: "Dr. David Lee",
-        title: "Trusted Dermatologist",
-        specialty: "Dermatology",
-        image: Image4,
-      },
-    ],
-  }) {
+import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 
+import { fetchDoctors } from '../../services/FetchDatas'
+export default function TeamSection() {
+
+    const [doctors, setDoctors] = useState([])
+    const navigate = useNavigate();
 
     useEffect(() => {
-      fetchDoctors()
-    })
+      const getDoctors = async () => {
+        const result = await fetchDoctors()
+        setDoctors(result.data.data)
+      }
+      getDoctors()
+    },[])
+
+
 
 
     return (
@@ -68,13 +43,14 @@ export default function TeamSection({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {doctors.map((doctor) => (
                 <div
-                  key={doctor.id}
+                  key={doctor._id}
                   className="group relative overflow-hidden rounded-lg bg-white shadow-md transition-all hover:shadow-lg"
+                  onClick={() => navigate(`patient/chat/${doctor._id}`)}
 
                 >
                   <div className="aspect-[3/4] w-full relative">
                     <img
-                      src={doctor.image || "/placeholder.svg"}
+                      src={doctor.profileImage}
                       alt={doctor.name}
                       className="object-cover w-full h-full"
                       style={{

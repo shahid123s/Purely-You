@@ -5,6 +5,8 @@ import DoctorDashboard from "../Pages/Doctor/DoctorDashboard";
 import DoctorLogin from "../Pages/Doctor/DoctorLogin";
 import DoctorSignup from "../Pages/Doctor/DoctorSignup";
 import VideoCall from "../Pages/Doctor/VideoCall";
+import DoctorChatPage from '../Pages/Doctor/DoctorChatPage';
+import ChatListPage from '../Pages/Doctor/ChatListPage';
 
 export default function DoctorRoutes() {
   return (
@@ -13,6 +15,8 @@ export default function DoctorRoutes() {
       <Route path="login" element={<DoctorLogin />} />
       <Route path="signup" element={<DoctorSignup />} />
       <Route path='/call' element={<VideoCall  />} />
+      <Route path="/chats" element={<ChatListPage />} />
+     <Route path="/chats/:patientId" element={<DoctorChatPage />} />
     </Routes>
   );
 }

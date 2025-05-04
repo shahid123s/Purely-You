@@ -25,3 +25,13 @@ export const fetchDoctors = async () => {
     }
 
 }
+
+
+export const fetchDoctorDetails = async (doctorId) => {
+    try {
+        const result = await patientAxiosInstance.get(`/doctor/${doctorId}`)
+        return result;
+    } catch (error) {
+        return error
+    }
+}

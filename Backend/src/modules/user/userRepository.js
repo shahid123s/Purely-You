@@ -42,7 +42,7 @@ export const userRepository = {
     },
     getAllApprovedDoctors: async() => {
         try {
-            return await Doctor.find({status: 'approved'}, 'name email').lean();
+            return await Doctor.find({status: 'approved'}, '-password').lean();
         } catch (error) {
             throw new CustomError(error.message, 500, ERROR_MESSAGES.DATABASE_ERROR);
         }

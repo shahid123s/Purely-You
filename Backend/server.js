@@ -33,6 +33,7 @@ app.use('/api/patient/auth', patient );
 app.use('/api/doctor/auth', doctor);
 app.use('/api/admin/auth', admin);
 app.use('/api/admin', adminRoute)
+// app.use('/api/get-doctor', patientRoute )
 app.use('/api/patient',autheticateUser, patientRoute)
 app.use('/api/doctor',autheticateDoctor, doctorRoute)
 app.use(errorHandler)

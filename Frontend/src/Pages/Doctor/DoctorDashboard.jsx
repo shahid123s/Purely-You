@@ -8,6 +8,7 @@ import {
   Copy,
   Video,
   FileText,
+  MessageCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import doctorAxiosInstance from "../../utils/doctorAxiosInstance";
@@ -38,7 +39,7 @@ export default function DoctorDashboard() {
       }
     };
 
-      console.log(doctorDetails, 'ith');
+    console.log(doctorDetails, 'ith');
     fetchAppointments();
   }, []);
 
@@ -46,13 +47,13 @@ export default function DoctorDashboard() {
   const isToday = (dateString) => {
     const today = new Date();
     const appointmentDate = new Date(dateString);
-    
+
     // Convert both to local date strings for comparison
     return (
       today.toDateString() === appointmentDate.toDateString()
     );
   };
-  
+
   const isFutureDate = (dateString) => {
     const today = new Date();
     const appointmentDate = new Date(dateString);
@@ -63,7 +64,7 @@ export default function DoctorDashboard() {
   // Appointment actions
   const generateMeetingLink = async (appointmentId) => {
     try {
-      
+
       const meetingLink = `${window.location.origin}/patient/call/${appointmentId}`;
       await navigator.clipboard.writeText(meetingLink);
 
@@ -71,7 +72,7 @@ export default function DoctorDashboard() {
         buttonState: "attended",
         attended: false,
         appointmentId,
-        roomId:appointmentId,
+        roomId: appointmentId,
       });
 
       if (response.data.success) {
@@ -79,9 +80,9 @@ export default function DoctorDashboard() {
           prev.map((apt) =>
             apt._id === appointmentId
               ? {
-                  ...apt,
-                  uiState: { buttonState: "attended", attended: false },
-                }
+                ...apt,
+                uiState: { buttonState: "attended", attended: false },
+              }
               : apt
           )
         );
@@ -102,7 +103,7 @@ export default function DoctorDashboard() {
         buttonState: "submitRecord",
         attended: true,
         appointmentId,
-        
+
       });
 
       if (response.data.success) {
@@ -110,13 +111,13 @@ export default function DoctorDashboard() {
           prev.map((apt) =>
             apt._id === appointmentId
               ? {
-                  ...apt,
-                  uiState: { buttonState: "submitRecord", attended: true },
-                }
+                ...apt,
+                uiState: { buttonState: "submitRecord", attended: true },
+              }
               : apt
           )
         );
-        navigate('/doctor/call', {state: {roomId: appointmentId}})
+        navigate('/doctor/call', { state: { roomId: appointmentId } })
       } else {
         toast.error("Failed to update appointment status");
       }
@@ -196,11 +197,11 @@ export default function DoctorDashboard() {
           prev.map((apt) =>
             apt._id === selectedAppointment._id
               ? {
-                  ...apt,
-                  status: "completed",
-                  notes: medicalRecord,
-                  uiState: undefined,
-                }
+                ...apt,
+                status: "completed",
+                notes: medicalRecord,
+                uiState: undefined,
+              }
               : apt
           )
         );
@@ -248,26 +249,26 @@ export default function DoctorDashboard() {
   // Filter appointments
   const filteredAppointments = appointments.filter(apt => {
     const matchesSearch = apt.patientName.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     if (activeTab === "today") {
       // Only today's scheduled appointments
       return isToday(apt.appointmentDate) && apt.status === "scheduled" && matchesSearch;
     }
-    
+
     if (activeTab === "upcoming") {
       // All pending (any date) OR future scheduled (not today)
       return (
-        (apt.status === "pending" || 
-         (apt.status === "scheduled" && isFutureDate(apt.appointmentDate))) &&
+        (apt.status === "pending" ||
+          (apt.status === "scheduled" && isFutureDate(apt.appointmentDate))) &&
         !(isToday(apt.appointmentDate) && apt.status === "scheduled") && // Explicit exclusion
         matchesSearch
       );
     }
-    
+
     if (activeTab === "past") {
       return ["completed", "no-show", "rejected"].includes(apt.status) && matchesSearch;
     }
-    
+
     return matchesSearch;
   });
 
@@ -293,6 +294,13 @@ export default function DoctorDashboard() {
             </p>
           </div>
           <div className="flex items-center space-x-2">
+            <button
+              onClick={() => navigate('/doctor/chats')}
+              className="flex items-center px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
+            >
+              <MessageCircle className="h-4 w-4 mr-2" /> {/* Add this icon import */}
+              View Chats
+            </button>
             <div className="relative h-10 w-10 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
               <User className="text-gray-600" />
             </div>
@@ -376,8 +384,8 @@ export default function DoctorDashboard() {
                 {activeTab === "today"
                   ? "Today's Appointments"
                   : activeTab === "upcoming"
-                  ? "Upcoming Appointments"
-                  : "Past Appointments"}
+                    ? "Upcoming Appointments"
+                    : "Past Appointments"}
               </h2>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -421,10 +429,10 @@ export default function DoctorDashboard() {
                   searchTerm
                     ? "No appointments match your search"
                     : activeTab === "today"
-                    ? "No appointments scheduled for today"
-                    : activeTab === "upcoming"
-                    ? "No upcoming appointments"
-                    : "No past appointments found"
+                      ? "No appointments scheduled for today"
+                      : activeTab === "upcoming"
+                        ? "No upcoming appointments"
+                        : "No past appointments found"
                 }
               />
             )}
@@ -478,11 +486,10 @@ const StatCard = ({ title, value, icon, color }) => {
 
 const TabButton = ({ children, active, onClick }) => (
   <button
-    className={`py-4 text-center text-sm font-medium ${
-      active
+    className={`py-4 text-center text-sm font-medium ${active
         ? "text-cyan-600 border-b-2 border-cyan-500"
         : "text-gray-500 hover:text-gray-700"
-    }`}
+      }`}
     onClick={onClick}
   >
     {children}
@@ -555,17 +562,16 @@ const AppointmentCard = ({
               <div className="flex items-center space-x-2">
                 <h4 className="font-semibold">{appointment.patientName}</h4>
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    appointment.status === "pending"
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${appointment.status === "pending"
                       ? "bg-yellow-100 text-yellow-800"
                       : appointment.status === "scheduled"
-                      ? "bg-blue-100 text-blue-800"
-                      : appointment.status === "completed"
-                      ? "bg-green-100 text-green-800"
-                      : appointment.status === "no-show"
-                      ? "bg-red-100 text-red-800"
-                      : "bg-gray-100 text-gray-800"
-                  }`}
+                        ? "bg-blue-100 text-blue-800"
+                        : appointment.status === "completed"
+                          ? "bg-green-100 text-green-800"
+                          : appointment.status === "no-show"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-800"
+                    }`}
                 >
                   {appointment.status}
                 </span>
