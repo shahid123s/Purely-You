@@ -52,5 +52,24 @@ export const adminController = {
         } catch (error) {
             next(error)
         }
+    },
+    toogelDoctorStatus: async (req, res, next) => {
+        try {
+            const {doctorId} = req.body;
+            console.log(doctorId, 'doctorId in adminController', req.body);
+            const result = await adminServices.toogelDoctorStatus(doctorId);
+            if(!result) {
+                return res.status(404).json({ message: "No doctors found" });
+            }
+            return res
+            .status(200)
+            .json({
+                success: true,
+                message: "Doctors found",
+                data: result
+            })
+        } catch (error) {
+            next(error)
+        }
     }
 }

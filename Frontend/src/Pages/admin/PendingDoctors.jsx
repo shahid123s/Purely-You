@@ -58,7 +58,7 @@ const PendingDoctorsPage = () => {
 
   const handleApprove = async (doctorId) => {
     try {
-      const resutlt = await adminAxiosInstance.put('/doctors/toggle-accept')
+      const resutlt = await adminAxiosInstance.put('/doctors/toggle-accept', {doctorId});
       toast.success('Doctor approved successfully')
       setIsModalOpen(false)
     } catch (error) {
@@ -68,10 +68,13 @@ const PendingDoctorsPage = () => {
 
   const handleReject = async (doctorId) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 500))
-      toast.success('Doctor rejected successfully')
-      setIsModalOpen(false)
-    } catch (error) {
+      console.log(doctorId)
+      const resutlt = await adminAxiosInstance.put('/doctors/toggle-accept', {doctorId});
+      if(resutlt.data.success){
+        toast.success('Doctor rejected successfully')
+      }
+        setIsModalOpen(false)
+      } catch (error) {
       toast.error('Failed to reject doctor')
     }
   }
@@ -202,7 +205,7 @@ const PendingDoctorsPage = () => {
                 
                 <div className="flex justify-end gap-4">
                   <button
-                    onClick={() => handleReject(selectedDoctor.id)}
+                    onClick={() => handleReject(selectedDoctor._id)}
                     className="flex items-center px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
                   >
                     <FiX className="mr-2" />

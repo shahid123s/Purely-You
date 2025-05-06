@@ -11,6 +11,7 @@ const router = express.Router();
 router.get('/users', adminController.getAllUsers);
 router.get('/approved-doctors', adminController.getAllApprovedDoctors);
 router.get('/pending-doctors', adminController.getAllPendingDoctors);
+router.put('/doctors/toggle-accept', adminController.toogelDoctorStatus)
 // router.post('/users', adminController.createUser);
 // router.put('/users/:id', adminController.updateUser);
 // router.delete('/users/:id', adminController.deleteUser);
