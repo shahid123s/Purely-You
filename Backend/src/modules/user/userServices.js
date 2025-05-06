@@ -67,6 +67,7 @@ export const userServices = {
             console.log(chat, 'chat')
             chat.content.push({ msg: data.newMessage, sender: 'patient'});
             await chatRepository.updateChat(chat);
+            return chat;
         } catch (error) {
             throw new CustomError("Error in sending message" + error.message, 500);
         }

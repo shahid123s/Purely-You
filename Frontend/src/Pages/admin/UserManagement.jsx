@@ -37,7 +37,7 @@ const UserManagement = () => {
       await new Promise(resolve => setTimeout(resolve, 500))
 
       setUsers(users.map(user =>
-        user.id === userId
+        user._id === userId
           ? { ...user, status: user.status === 'active' ? 'blocked' : 'active' }
           : user
       ))
@@ -121,7 +121,7 @@ const UserManagement = () => {
                         </td>
                         <td className="p-3">
                           <button
-                            onClick={() => handleBlock(user.id)}
+                            onClick={() => handleBlock(user._id)}
                             className={`p-2 rounded-lg ${user.status === 'active' ? 'text-red-600 bg-red-50 hover:bg-red-100' : 'text-green-600 bg-green-50 hover:bg-green-100'}`}
                             title={user.status === 'active' ? 'Block user' : 'Unblock user'}
                           >

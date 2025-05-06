@@ -13,17 +13,20 @@ const chatSchema = new mongoose.Schema({
     ref: 'Patient',
     required: true
   },
-  content: [{
-    msg: {
-      type: String,
-      required: true
-    },
-    sender: {
-      type: String,
-      required: true,
-      enum: ['doctor', 'patient']
-    }
-}], 
+  content: {
+    type: [{
+      msg: {
+        type: String,
+        required: true
+      },
+      sender: {
+        type: String,
+        required: true,
+        enum: ['doctor', 'patient']
+      }
+    }],
+    default: []
+  },
  lastMessage: {
     type: Date,
     default: Date.now

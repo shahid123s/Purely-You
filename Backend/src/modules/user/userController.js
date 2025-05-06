@@ -147,7 +147,7 @@ export const sendMessage = async (req, res, next) => {
         return res.status(200).json({
             success: true,
             message: "User Found",
-            // data: result
+            data: result
         })
     } catch (error) {
         next(error)
