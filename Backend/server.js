@@ -15,6 +15,8 @@ import { autheticateDoctor, autheticateUser } from './src/middleware/userAuthMid
 import { patient, doctor, admin } from './src/modules/auth/authRoute.js';
 import adminRoute from './src/modules/admin/adminRoute.js'
 import doctorRoute from './src/modules/doctor/doctorRoute.js'
+import { getAllDoctors } from './src/modules/user/userController.js';
+
 const {port} = appConfig.app
 
 
@@ -31,6 +33,7 @@ app.get('/', (req, res) => {
     res.end('Hello World!');
 }) 
 app.use('/analyse',aiRoute )
+app.get('/api/get-doctors', getAllDoctors)
 app.use('/api/patient/auth', patient );
 app.use('/api/doctor/auth', doctor);
 app.use('/api/admin/auth', admin);

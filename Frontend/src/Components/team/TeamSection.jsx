@@ -45,7 +45,7 @@ export default function TeamSection() {
                 <div
                   key={doctor._id}
                   className="group relative overflow-hidden rounded-lg bg-white shadow-md transition-all hover:shadow-lg"
-                  onClick={() => navigate(`patient/chat/${doctor._id}`)}
+                  onClick={() => navigate(`/patient/chat/${doctor._id}`)}
 
                 >
                   <div className="aspect-[3/4] w-full relative">
