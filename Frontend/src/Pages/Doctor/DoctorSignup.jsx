@@ -40,7 +40,7 @@ export default function DoctorSignup() {
     try {
       const uploadData = new FormData();
       uploadData.append("file", file);
-      uploadData.append("upload_preset", "SkillSyncCourse"); // Replace with your actual preset
+      uploadData.append("upload_preset", "Doctor"); // Replace with your actual preset
 
       const response = await axios.post(
         "https://api.cloudinary.com/v1_1/dmjcqy36b/image/upload", // Replace with your cloud name
