@@ -11,43 +11,44 @@ const PendingDoctorsPage = () => {
   const [selectedDoctor, setSelectedDoctor] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  useEffect(() => {
-    const fetchPendingDoctors = async () => {
-      try {
-        // Simulate API call
-        const response = await adminAxiosInstance.get('/pending-doctors');
-        // Uncomment below line for real API call
-        // const data = await response.json();
-        if(!response.data.success){
-          toast.error('Failed to fetch pending doctors')
-          return 
-        }
-        setPendingDoctors(response.data.doctors)
 
-        
-        // Dummy data if API fails
-        // const specialties = ['Dermatology', 'Dermatology', 'Dermatology', 'Dermatology', 'Dermatology']
-        // const dummyDoctors = Array.from({ length: 5 }, (_, i) => ({
-        //   id: i + 1,
-        //   name: `Dr. ${['Smith', 'Johnson', 'Williams', 'Brown', 'Jones'][i]}`,
-        //   specialty: specialties[Math.floor(Math.random() * specialties.length)],
-        //   email: `newdoctor${i + 1}@example.com`,
-        //   phone: `(${Math.floor(100 + Math.random() * 900)}) ${Math.floor(100 + Math.random() * 900)}-${Math.floor(1000 + Math.random() * 9000)}`,
-        //   experience: `${Math.floor(Math.random() * 15) + 5} years`,
-        //   education: 'MD from Harvard Medical School',
-        //   license: `LIC-${Math.floor(10000 + Math.random() * 90000)}`,
-        //   documents: ['Medical Degree', 'License Certificate', 'ID Proof']
-        // }))
-        
-        // Use real data if available, otherwise dummy data
-        setPendingDoctors(dummyDoctors)
-        setLoading(false)
-      } catch (error) {
+  const fetchPendingDoctors = async () => {
+    try {
+      // Simulate API call
+      const response = await adminAxiosInstance.get('/pending-doctors');
+      // Uncomment below line for real API call
+      // const data = await response.json();
+      if(!response.data.success){
         toast.error('Failed to fetch pending doctors')
-        setLoading(false)
+        return 
       }
+      setPendingDoctors(response.data.doctors)
+
+      
+      // Dummy data if API fails
+      // const specialties = ['Dermatology', 'Dermatology', 'Dermatology', 'Dermatology', 'Dermatology']
+      // const dummyDoctors = Array.from({ length: 5 }, (_, i) => ({
+      //   id: i + 1,
+      //   name: `Dr. ${['Smith', 'Johnson', 'Williams', 'Brown', 'Jones'][i]}`,
+      //   specialty: specialties[Math.floor(Math.random() * specialties.length)],
+      //   email: `newdoctor${i + 1}@example.com`,
+      //   phone: `(${Math.floor(100 + Math.random() * 900)}) ${Math.floor(100 + Math.random() * 900)}-${Math.floor(1000 + Math.random() * 9000)}`,
+      //   experience: `${Math.floor(Math.random() * 15) + 5} years`,
+      //   education: 'MD from Harvard Medical School',
+      //   license: `LIC-${Math.floor(10000 + Math.random() * 90000)}`,
+      //   documents: ['Medical Degree', 'License Certificate', 'ID Proof']
+      // }))
+      
+      // Use real data if available, otherwise dummy data
+      setPendingDoctors(dummyDoctors)
+      setLoading(false)
+    } catch (error) {
+      toast.error('Failed to fetch pending doctors')
+      setLoading(false)
     }
-    
+  }
+
+  useEffect(() => {
     fetchPendingDoctors()
   }, [])
 
@@ -61,6 +62,7 @@ const PendingDoctorsPage = () => {
       const resutlt = await adminAxiosInstance.put('/doctors/toggle-accept', {doctorId});
       toast.success('Doctor approved successfully')
       setIsModalOpen(false)
+      fetchPendingDoctors()
     } catch (error) {
       toast.error('Failed to approve doctor')
     }
@@ -71,7 +73,8 @@ const PendingDoctorsPage = () => {
       console.log(doctorId)
       const resutlt = await adminAxiosInstance.put('/doctors/toggle-accept', {doctorId});
       if(resutlt.data.success){
-        toast.success('Doctor rejected successfully')
+      fetchPendingDoctors()
+      toast.success('Doctor rejected successfully')
       }
         setIsModalOpen(false)
       } catch (error) {
