@@ -35,5 +35,22 @@ export const adminController = {
         } catch (error) {
             next(error);
         }
+    },
+    getAllPendingDoctors: async (req, res, next) => {
+        try {
+            const doctors  = await adminServices.getAllPendingDoctors();
+            if(!doctors) {
+                return res.status(404).json({ message: "No doctors found" });
+            }
+            return res
+            .status(200)
+            .json({
+                success: true,
+                message: "Doctors found",
+                doctors,
+            })
+        } catch (error) {
+            next(error)
+        }
     }
 }

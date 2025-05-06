@@ -43,6 +43,14 @@ export const adminRepository = {
         } catch (error) {
             throw new CustomError(error.message, 500);
         }
+    },
+    getAllPendingDoctors: async () => {
+        try {
+            const doctors = await Doctor.find({status: 'pending'}, '-password -__v').lean();
+            return doctors;
+        } catch (error) {
+            throw new CustomError(error.message, 500);
+        }
     }
 
 }

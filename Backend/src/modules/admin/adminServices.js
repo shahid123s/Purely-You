@@ -18,5 +18,13 @@ export const adminServices = {
         } catch (error) {
             throw CustomError(error.message, 500);
         }
+    },
+    getAllPendingDoctors: async () => {
+        try {
+            const doctors = await adminRepository.getAllPendingDoctors();
+            return doctors;
+        } catch (error) {
+            throw CustomError(error.message, 500);
+        }
     }
 }

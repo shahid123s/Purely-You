@@ -10,6 +10,7 @@ const router = express.Router();
 // router.get('/dashboard', adminController.dashboard);
 router.get('/users', adminController.getAllUsers);
 router.get('/approved-doctors', adminController.getAllApprovedDoctors);
+router.get('/pending-doctors', adminController.getAllPendingDoctors);
 // router.post('/users', adminController.createUser);
 // router.put('/users/:id', adminController.updateUser);
 // router.delete('/users/:id', adminController.deleteUser);

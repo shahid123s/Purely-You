@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import { FiUser, FiSearch, FiEye, FiCheck, FiX } from 'react-icons/fi'
 import AdminSidebar from '../../components/admin/AdminSidebar'
+import adminAxiosInstance from '../../utils/adminAxiosInstance'
 
 const PendingDoctorsPage = () => {
   const [pendingDoctors, setPendingDoctors] = useState([])
@@ -14,23 +15,29 @@ const PendingDoctorsPage = () => {
     const fetchPendingDoctors = async () => {
       try {
         // Simulate API call
-        const response = await fetch('/api/pending-doctors');
+        const response = await adminAxiosInstance.get('/pending-doctors');
         // Uncomment below line for real API call
         // const data = await response.json();
+        if(!response.data.success){
+          toast.error('Failed to fetch pending doctors')
+          return 
+        }
+        setPendingDoctors(response.data.doctors)
+
         
         // Dummy data if API fails
-        const specialties = ['Dermatology', 'Dermatology', 'Dermatology', 'Dermatology', 'Dermatology']
-        const dummyDoctors = Array.from({ length: 5 }, (_, i) => ({
-          id: i + 1,
-          name: `Dr. ${['Smith', 'Johnson', 'Williams', 'Brown', 'Jones'][i]}`,
-          specialty: specialties[Math.floor(Math.random() * specialties.length)],
-          email: `newdoctor${i + 1}@example.com`,
-          phone: `(${Math.floor(100 + Math.random() * 900)}) ${Math.floor(100 + Math.random() * 900)}-${Math.floor(1000 + Math.random() * 9000)}`,
-          experience: `${Math.floor(Math.random() * 15) + 5} years`,
-          education: 'MD from Harvard Medical School',
-          license: `LIC-${Math.floor(10000 + Math.random() * 90000)}`,
-          documents: ['Medical Degree', 'License Certificate', 'ID Proof']
-        }))
+        // const specialties = ['Dermatology', 'Dermatology', 'Dermatology', 'Dermatology', 'Dermatology']
+        // const dummyDoctors = Array.from({ length: 5 }, (_, i) => ({
+        //   id: i + 1,
+        //   name: `Dr. ${['Smith', 'Johnson', 'Williams', 'Brown', 'Jones'][i]}`,
+        //   specialty: specialties[Math.floor(Math.random() * specialties.length)],
+        //   email: `newdoctor${i + 1}@example.com`,
+        //   phone: `(${Math.floor(100 + Math.random() * 900)}) ${Math.floor(100 + Math.random() * 900)}-${Math.floor(1000 + Math.random() * 9000)}`,
+        //   experience: `${Math.floor(Math.random() * 15) + 5} years`,
+        //   education: 'MD from Harvard Medical School',
+        //   license: `LIC-${Math.floor(10000 + Math.random() * 90000)}`,
+        //   documents: ['Medical Degree', 'License Certificate', 'ID Proof']
+        // }))
         
         // Use real data if available, otherwise dummy data
         setPendingDoctors(dummyDoctors)
@@ -51,8 +58,7 @@ const PendingDoctorsPage = () => {
 
   const handleApprove = async (doctorId) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 500))
-      setPendingDoctors(pendingDoctors.filter(doctor => doctor.id !== doctorId))
+      const resutlt = await adminAxiosInstance.put('/doctors/toggle-accept')
       toast.success('Doctor approved successfully')
       setIsModalOpen(false)
     } catch (error) {
@@ -119,11 +125,11 @@ const PendingDoctorsPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredDoctors.length > 0 ? (
-                  filteredDoctors.map(doctor => (
-                    <tr key={doctor.id} className="border-b hover:bg-gray-50">
+                {pendingDoctors.length > 0 ? (
+                  pendingDoctors.map(doctor => (
+                    <tr key={doctor._id} className="border-b hover:bg-gray-50">
                       <td className="p-3 font-medium">{doctor.name}</td>
-                      <td className="p-3">{doctor.specialty}</td>
+                      <td className="p-3">{doctor.specialty || "Dermatologist"}</td>
                       <td className="p-3 text-sm">{doctor.email}</td>
                       <td className="p-3 text-sm">{doctor.phone}</td>
                       <td className="p-3">{doctor.experience}</td>
@@ -169,10 +175,10 @@ const PendingDoctorsPage = () => {
                   <div>
                     <h4 className="font-medium text-gray-700 mb-2">Professional Information</h4>
                     <div className="space-y-2">
-                      <p><span className="text-gray-600">Specialty:</span> {selectedDoctor.specialty}</p>
-                      <p><span className="text-gray-600">Experience:</span> {selectedDoctor.experience}</p>
-                      <p><span className="text-gray-600">Education:</span> {selectedDoctor.education}</p>
-                      <p><span className="text-gray-600">License:</span> {selectedDoctor.license}</p>
+                      {/* <p><span className="text-gray-600">Specialty:</span> {selectedDoctor.specialty}</p> */}
+                      <p><span className="text-gray-600">Experience:</span> {selectedDoctor.experince}</p>
+                      {/* <p><span className="text-gray-600">Education:</span> {selectedDoctor.education}</p> */}
+                      <p><span className="text-gray-600">License:</span> {selectedDoctor.licenseNumber}</p>
                     </div>
                   </div>
                   
@@ -188,9 +194,9 @@ const PendingDoctorsPage = () => {
                 <div className="mb-6">
                   <h4 className="font-medium text-gray-700 mb-2">Documents</h4>
                   <ul className="list-disc pl-5 space-y-1">
-                    {selectedDoctor.documents.map((doc, index) => (
+                    {/* {selectedDoctor.documents.map((doc, index) => (
                       <li key={index}>{doc}</li>
-                    ))}
+                    ))} */}
                   </ul>
                 </div>
                 
@@ -203,7 +209,7 @@ const PendingDoctorsPage = () => {
                     Reject
                   </button>
                   <button
-                    onClick={() => handleApprove(selectedDoctor.id)}
+                    onClick={() => handleApprove(selectedDoctor._id)}
                     className="flex items-center px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200"
                   >
                     <FiCheck className="mr-2" />
