@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import doctorAxiosInstance from '../../utils/doctorAxiosInstance';
+import { User2 } from 'lucide-react';
 
 const DoctorChatPage = () => {
   const { patientId } = useParams();
@@ -21,67 +22,50 @@ const DoctorChatPage = () => {
     timestamp: new Date(Date.now() - 1000 * 60 * 55).toISOString(),
     isDoctor: false,
   },]);
+  const params = useParams()
   const [newMessage, setNewMessage] = useState('');
   const [patient, setPatient] = useState({
     _id: patientId,
     name: 'Rahul Nair',
     profileImage: 'https://randomuser.me/api/portraits/men/32.jpg',
   });
+  const [chat, setChat] = useState()
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // const [patientRes, messagesRes] = await Promise.all([
-        //   doctorAxiosInstance.get(`/patients/${patientId}`),
-        //   doctorAxiosInstance.get(`/chats/${patientId}`)
-        // ]);
-        // const dummyPatient = {
-        //     _id: patientId,
-        //     name: 'Rahul Nair',
-        //     profileImage: 'https://randomuser.me/api/portraits/men/32.jpg',
-        //   };
-    
-        //   // Dummy chat messages
-        //   const dummyMessages = [
-        //     {
-        //       content: 'Hello Doctor, I’ve been feeling unwell since yesterday.',
-        //       timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-        //       isDoctor: false,
-        //     },
-        //     {
-        //       content: 'Can you describe the symptoms?',
-        //       timestamp: new Date(Date.now() - 1000 * 60 * 58).toISOString(),
-        //       isDoctor: true,
-        //     },
-        //     {
-        //       content: 'I’ve had a sore throat and mild fever.',
-        //       timestamp: new Date(Date.now() - 1000 * 60 * 55).toISOString(),
-        //       isDoctor: false,
-        //     },
-        //   ];
-    
-        //   setPatient(dummyPatient);
-        //   setMessages(dummyMessages);
+        console.log(params)
+        const result = await doctorAxiosInstance.get('/chat/patient', {
+          params: {patientId: params.patientId}
+        })
+        setChat(result.data.data)
+        setPatient(result.data.data.patient);
+        setMessages(result.data.data.content);
       } catch (error) {
         console.error('Error loading chat:', error);
-        navigate('/doctor/chats');
+        // navigate('/doctor/chats');
       }
     };
     
     fetchData();
   }, [patientId]);
-
+  
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
-
+  
     try {
       const response = await doctorAxiosInstance.post('/chats/send', {
-        patientId,
-        message: newMessage,
-        isDoctor: true
+        chatId: chat._id,
+        newMessage,
+        sender: 'doctor'
       });
-
-      setMessages(prev => [...prev, response.data]);
+  
+      setMessages(prev => [...prev, {
+        msg: newMessage,
+        timestamp: new Date().toISOString(),
+        sender: 'doctor',
+        // ...response.data
+      }]);
       setNewMessage('');
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -99,11 +83,7 @@ const DoctorChatPage = () => {
         >
           ← Back
         </button>
-        <img
-          src={patient.profileImage}
-          alt={patient.name}
-          className="w-12 h-12 rounded-full"
-        />
+        <User2 size={30}/>
         <div className="ml-4">
           <h2 className="text-xl font-bold">{patient.name}</h2>
           <p className="text-gray-600">Patient</p>
@@ -114,18 +94,18 @@ const DoctorChatPage = () => {
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`flex ${message.isDoctor ? 'justify-end' : 'justify-start'}`}
+            className={`flex ${message.sender != 'patient' ? 'justify-end' : 'justify-start'}`}
           >
             <div
               className={`max-w-xs p-3 rounded-lg ${
-                message.isDoctor 
+                message.sender != 'patient' 
                   ? 'bg-cyan-100 ml-auto' 
                   : 'bg-gray-100'
               }`}
             >
-              <p className="text-gray-800">{message.content}</p>
+              <p className="text-gray-800">{message.msg}</p>
               <p className="text-xs text-gray-500 mt-1">
-                {new Date(message.timestamp).toLocaleTimeString()}
+                {/* {new Date(message.timestamp).toLocaleTimeString()} */}
               </p>
             </div>
           </div>

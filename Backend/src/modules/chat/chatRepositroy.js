@@ -25,5 +25,27 @@ export const chatRepository = {
         } catch (error) {
             throw new CustomError(error.message, 500);
         }
+    }, 
+    getChatByDoctorId: async (doctorId) => {
+        try {
+            return await Chat.find({doctor: doctorId}).populate('patient', '-password').lean();
+        } catch (error) {
+            throw new CustomError(error.message, 500);
+        }
+    }, 
+    getChatByDoctorId: async( id) => {
+        try {
+            return await Chat.findById(id)
+        } catch (error) {
+            throw new CustomError(error.message, 500);
+            
+        }
     }
+    // sendChatToPatient: async (chatId, newMessage) => {
+    //     try {
+    //         return await Chat.findByIdAndUpdate(chatId, {content:{msg: newMessage, sen} ]})
+    //     } catch (error) {
+    //         throw new CustomError(error.message, 500);
+    //     }
+    // }
 }
